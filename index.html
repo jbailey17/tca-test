@@ -705,61 +705,113 @@ function renderExperimental(){
 
   const dots = cats.map((_, i) => `<div class="dot${i===0?' active':''}"></div>`).join('');
 
+  const appsScriptCode = `const K = 32, DEFAULT_ELO = 1000, SHEET = 'votes';
+function doGet(e) {
+  try {
+    const p = e.parameter;
+    return p.action === 'vote' ? recordVote(p) : getRankings();
+  } catch(err) { return json({error: err.toString()}); }
+}
+function recordVote(p) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(SHEET);
+  if (!sh) { sh = ss.insertSheet(SHEET); sh.appendRow(['timestamp','winner_id','loser_id','winner_film','loser_film','winner_team','loser_team','winner_event','loser_event']); }
+  sh.appendRow([new Date().toISOString(),p.wid,p.lid,p.wfilm||'',p.lfilm||'',p.wteam||'',p.lteam||'',p.wevent||'',p.levent||'']);
+  return json({ok:true});
+}
+function getRankings() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET);
+  if (!sh || sh.getLastRow() < 2) return json({elos:{},wins:{},losses:{},total:0});
+  const rows = sh.getRange(2,1,sh.getLastRow()-1,9).getValues();
+  const elos={}, wins={}, losses={};
+  rows.forEach(r => {
+    const w=String(r[1]), l=String(r[2]);
+    if (!w||!l||w===l) return;
+    if (elos[w]===undefined){elos[w]=DEFAULT_ELO;wins[w]=0;losses[w]=0;}
+    if (elos[l]===undefined){elos[l]=DEFAULT_ELO;wins[l]=0;losses[l]=0;}
+    const exp = 1/(1+Math.pow(10,(elos[l]-elos[w])/400));
+    elos[w]=Math.round((elos[w]+K*(1-exp))*10)/10;
+    elos[l]=Math.round((elos[l]+K*(0-(1-exp)))*10)/10;
+    wins[w]++; losses[l]++;
+  });
+  return json({elos,wins,losses,total:rows.length});
+}
+function json(obj){return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);}`;
+
   setTimeout(() => {
+    // Cat carousel
     const carousel = document.getElementById('cat-carousel');
     const track = document.getElementById('cat-track');
     const dotsEl = document.getElementById('cat-dots');
     const prevBtn = document.getElementById('cat-prev');
     const nextBtn = document.getElementById('cat-next');
-    if (!carousel || !track || !dotsEl) return;
-    const count = cats.length;
-    let idx = 0;
-    function goTo(n, animate) {
-      n = Math.max(0, Math.min(count - 1, n));
-      idx = n;
-      if (!animate) track.classList.add('no-transition');
-      track.style.transform = 'translateX(' + (-idx * 100) + '%)';
-      if (!animate) { track.offsetHeight; track.classList.remove('no-transition'); }
-      dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-      if (prevBtn) prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
-      if (nextBtn) nextBtn.style.opacity = idx === count - 1 ? '0.3' : '1';
-    }
-    if (prevBtn) prevBtn.addEventListener('click', () => goTo(idx - 1, true));
-    if (nextBtn) nextBtn.addEventListener('click', () => goTo(idx + 1, true));
-    // Touch swipe
-    let sx = 0, sy = 0, st = 0, locked = null, dragging = false, dragOffset = 0;
-    carousel.addEventListener('touchstart', e => {
-      if (e.touches.length !== 1) return;
-      sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
-      locked = null; dragging = false; dragOffset = 0;
-    }, {passive: true});
-    carousel.addEventListener('touchmove', e => {
-      if (e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
-      if (locked === null) {
-        if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
-        locked = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+    if (carousel && track && dotsEl) {
+      const count = cats.length;
+      let idx = 0;
+      function goTo(n, animate) {
+        n = Math.max(0, Math.min(count - 1, n));
+        idx = n;
+        if (!animate) track.classList.add('no-transition');
+        track.style.transform = 'translateX(' + (-idx * 100) + '%)';
+        if (!animate) { track.offsetHeight; track.classList.remove('no-transition'); }
+        dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+        if (prevBtn) prevBtn.style.opacity = idx === 0 ? '0.3' : '1';
+        if (nextBtn) nextBtn.style.opacity = idx === count - 1 ? '0.3' : '1';
       }
-      if (locked === 'v') return;
-      dragOffset = (idx === 0 && dx > 0) || (idx === count-1 && dx < 0) ? dx * 0.15 : dx;
-      e.preventDefault(); dragging = true;
-      track.classList.add('no-transition');
-      track.style.transform = 'translateX(calc(' + (-idx * 100) + '% + ' + dragOffset + 'px))';
-    }, {passive: false});
-    carousel.addEventListener('touchend', () => {
-      if (!dragging || locked !== 'h') { dragging = false; return; }
-      dragging = false; track.classList.remove('no-transition');
-      const w = carousel.offsetWidth, elapsed = Math.max(1, Date.now() - st);
-      const commit = Math.abs(dragOffset) > w * 0.12 || Math.abs(dragOffset) / elapsed > 0.3;
-      goTo(commit ? (dragOffset < 0 ? idx + 1 : idx - 1) : idx, true);
-    }, {passive: true});
-    carousel.addEventListener('touchcancel', () => {
-      if (dragging) { dragging = false; track.classList.remove('no-transition'); goTo(idx, true); }
-    }, {passive: true});
-    goTo(0, false);
+      if (prevBtn) prevBtn.addEventListener('click', () => goTo(idx - 1, true));
+      if (nextBtn) nextBtn.addEventListener('click', () => goTo(idx + 1, true));
+      let sx = 0, sy = 0, st = 0, locked = null, dragging = false, dragOffset = 0;
+      carousel.addEventListener('touchstart', e => {
+        if (e.touches.length !== 1) return;
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+        locked = null; dragging = false; dragOffset = 0;
+      }, {passive: true});
+      carousel.addEventListener('touchmove', e => {
+        if (e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+        if (locked === null) {
+          if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+          locked = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
+        }
+        if (locked === 'v') return;
+        dragOffset = (idx === 0 && dx > 0) || (idx === count-1 && dx < 0) ? dx * 0.15 : dx;
+        e.preventDefault(); dragging = true;
+        track.classList.add('no-transition');
+        track.style.transform = 'translateX(calc(' + (-idx * 100) + '% + ' + dragOffset + 'px))';
+      }, {passive: false});
+      carousel.addEventListener('touchend', () => {
+        if (!dragging || locked !== 'h') { dragging = false; return; }
+        dragging = false; track.classList.remove('no-transition');
+        const w = carousel.offsetWidth, elapsed = Math.max(1, Date.now() - st);
+        const commit = Math.abs(dragOffset) > w * 0.12 || Math.abs(dragOffset) / elapsed > 0.3;
+        goTo(commit ? (dragOffset < 0 ? idx + 1 : idx - 1) : idx, true);
+      }, {passive: true});
+      carousel.addEventListener('touchcancel', () => {
+        if (dragging) { dragging = false; track.classList.remove('no-transition'); goTo(idx, true); }
+      }, {passive: true});
+      goTo(0, false);
+    }
+    // Versus init
+    _vsInit();
+    // Code copy button
+    const copyBtn = document.getElementById('vs-copy-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(appsScriptCode).then(() => {
+          copyBtn.textContent = '✓ Copied!';
+          setTimeout(() => { copyBtn.textContent = 'Copy code'; }, 2000);
+        });
+      });
+    }
   }, 0);
 
-  return `<div style="padding:28px 0 48px;text-align:center;max-width:480px;margin:0 auto;">
+  const sectionHead = (emoji, title) =>
+    `<div style="display:flex;align-items:center;gap:8px;margin:0 0 4px;">
+      <span style="font-size:18px;">${emoji}</span>
+      <span style="font-size:16px;font-weight:700;color:var(--text);">${title}</span>
+    </div>`;
+
+  return `<div style="padding:28px 0 60px;text-align:center;max-width:500px;margin:0 auto;">
     <h2 style="margin:0 0 4px;font-size:22px;letter-spacing:0.04em;background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;background-size:300% 100%;animation:rainbow-tab 2s linear infinite;display:inline-block;">TOPSECRET</h2>
     <p style="color:var(--text-dim);font-size:14px;margin:0 0 20px;line-height:1.5;">You have discovered the secret tab! Oh my god!</p>
 
@@ -779,6 +831,56 @@ function renderExperimental(){
     <p style="color:var(--text-dim);font-size:14px;margin:16px 16px 6px;line-height:1.6;">Oh, you probably want more than cute pics of cats. Or maybe that's all you want. Well, here's a cool button that opens up a random Cinemadrome film on YouTube. Enjoy!</p>
     <button onclick="(function(){const vids=DATA.submissions.map(s=>s.video_id).filter(Boolean);const id=vids[Math.floor(Math.random()*vids.length)];window.open('https://www.youtube.com/watch?v='+id,'_blank');})()" style="margin:12px auto 0;display:inline-block;background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff);background-size:300% 100%;animation:rainbow-tab 2s linear infinite;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,0.4);letter-spacing:0.03em;">🎬 Open a Random Film</button>
     <p style="color:var(--text-faint);font-size:13px;font-style:italic;margin:20px 16px 0;line-height:1.5;">(And don't you dare tell anyone else about this tab…)</p>
+
+    <!-- ── Film Versus ── -->
+    <div style="border-top:1px solid var(--border);margin:36px 16px 0;padding-top:28px;text-align:left;">
+      ${sectionHead('🥊', 'Film Versus')}
+      <p style="color:var(--text-dim);font-size:13px;margin:0 0 20px;line-height:1.5;">Rate films head-to-head. Results are aggregated into a community Elo ranking.</p>
+
+      <!-- Setup (shown when no URL configured) -->
+      <div id="vs-setup">
+        <div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;">
+          <p style="color:var(--text);font-size:13px;font-weight:600;margin:0 0 12px;">First-time setup — takes about 2 minutes</p>
+          <ol style="color:var(--text-dim);font-size:13px;line-height:1.8;margin:0 0 16px;padding-left:20px;">
+            <li>Create a new <a href="https://sheets.new" target="_blank" style="color:var(--accent)">Google Sheet</a></li>
+            <li>Open <strong style="color:var(--text)">Extensions → Apps Script</strong></li>
+            <li>Delete any existing code, paste the code below, and click <strong style="color:var(--text)">Save</strong></li>
+            <li>Click <strong style="color:var(--text)">Deploy → New deployment</strong></li>
+            <li>Choose <strong style="color:var(--text)">Web app</strong>, set "Who has access" to <strong style="color:var(--text)">Anyone</strong>, click <strong style="color:var(--text)">Deploy</strong></li>
+            <li>Copy the <strong style="color:var(--text)">Web app URL</strong> and paste it below</li>
+          </ol>
+          <div style="position:relative;margin-bottom:12px;">
+            <pre style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:10px;line-height:1.5;overflow-x:auto;color:var(--text-dim);margin:0;white-space:pre-wrap;word-break:break-all;">${appsScriptCode.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+            <button id="vs-copy-btn" style="position:absolute;top:8px;right:8px;background:var(--bg-elev-2);border:1px solid var(--border);color:var(--text-dim);font-size:11px;padding:4px 8px;border-radius:6px;cursor:pointer;">Copy code</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <input id="vs-url-input" placeholder="Paste Apps Script URL here" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font:inherit;font-size:13px;min-width:0;">
+            <button onclick="_vsSaveUrl()" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Save URL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arena (shown when URL is configured) -->
+      <div id="vs-arena" style="display:none;">
+        <p style="color:var(--text-dim);font-size:13px;margin:0 0 14px;line-height:1.5;">Watch both films, then pick your favorite. Results feed into the Elo rankings below.</p>
+        <div id="vs-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+          <p id="vs-status" style="font-size:12px;color:var(--text-faint);margin:0;min-height:18px;"></p>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <button onclick="_vsSkip()" style="background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;padding:0;text-decoration:underline;">Skip pair</button>
+            <button onclick="_vsClearUrl()" style="background:none;border:none;color:var(--text-faint);font-size:12px;cursor:pointer;padding:0;" title="Change Apps Script URL">⚙ Settings</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rankings -->
+      <div style="margin-top:28px;">
+        ${sectionHead('🏆', 'Elo Rankings')}
+        <p style="color:var(--text-dim);font-size:13px;margin:0 0 12px;line-height:1.5;">Community-voted rankings based on all head-to-head comparisons.</p>
+        <button id="vs-rank-btn" onclick="_vsLoadRankings()" style="background:var(--bg-elev);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">Load rankings</button>
+        <div id="vs-rankings-list" style="margin-top:12px;"></div>
+      </div>
+    </div>
   </div>`;
 }
 function renderStats(filtered){
@@ -3037,6 +3139,169 @@ if (nextEl) observer.observe(nextEl,{childList: true,subtree: false});
 <script>
 // Capture a clean source snapshot on DOMContentLoaded — after the full document
 // is parsed but using a string-level cleanup to undo the three known DOM mutations
+// ── Film Versus ──────────────────────────────────────────────────────────────
+window._VS = window._VS || {films: null, shown: new Set(), pair: null, busy: false};
+
+function _vsFilms() {
+  if (!window._VS.films) window._VS.films = DATA.submissions.filter(s => s.video_id);
+  return window._VS.films;
+}
+function _vsGetUrl() {
+  return localStorage.getItem('_vs_url') || 'https://script.google.com/macros/s/AKfycbzsGrPKKX8Bl-6Lgzp4gEoirdgaj-Bx9Dwv_bP9OEW-4ctjUTcbQJVnRrPZhaeTO5phiQ/exec';
+}
+
+function _vsSaveUrl() {
+  const v = (document.getElementById('vs-url-input') || {}).value || '';
+  if (!v.trim()) return;
+  localStorage.setItem('_vs_url', v.trim());
+  _vsInit();
+}
+
+function _vsClearUrl() {
+  localStorage.removeItem('_vs_url');
+  _vsInit();
+}
+
+function _vsNewPair() {
+  const films = _vsFilms();
+  if (films.length < 2) return null;
+  let a, b, key, tries = 0;
+  do {
+    a = films[Math.floor(Math.random() * films.length)];
+    b = films[Math.floor(Math.random() * films.length)];
+    if (a === b) continue;
+    key = [a.video_id, b.video_id].sort().join('|');
+    tries++;
+  } while (window._VS.shown.has(key) && tries < 150);
+  if (tries >= 150) window._VS.shown.clear();
+  window._VS.shown.add(key);
+  window._VS.pair = {a, b};
+  return window._VS.pair;
+}
+
+function _vsCardHtml(film, side) {
+  const ytUrl = 'https://www.youtube.com/watch?v=' + film.video_id;
+  const label = esc(film.film || '—');
+  const sub = esc((film.display_team || film.team || '') + ' · ' + (film.event || '') + ' ' + (film.year || ''));
+  const thumb = thumbUrl(film.video_id, 'mqdefault');
+  return `<div style="background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;">
+    <a href="${ytUrl}" target="_blank" rel="noopener" style="display:block;position:relative;aspect-ratio:16/9;background:#000;overflow:hidden;text-decoration:none;">
+      <img src="${thumb}" onerror="this.src='https://i.ytimg.com/vi/${film.video_id}/hqdefault.jpg'" alt="${label}" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.25s;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform=''">
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+      </div>
+    </a>
+    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;flex:1;">
+      <div style="font-weight:700;font-size:14px;color:var(--text);line-height:1.3;">${label}</div>
+      <div style="font-size:11px;color:var(--text-dim);line-height:1.4;">${sub}</div>
+      <button onclick="_vsVote('${side}')" style="background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:auto;transition:filter 0.15s;" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter=''">
+        ✓ I prefer this one
+      </button>
+    </div>
+  </div>`;
+}
+
+function _vsRenderPair() {
+  const cardsEl = document.getElementById('vs-cards');
+  const statusEl = document.getElementById('vs-status');
+  if (!cardsEl) return;
+  const pair = _vsNewPair();
+  if (!pair) { cardsEl.innerHTML = '<p style="color:var(--text-dim)">No films found.</p>'; return; }
+  cardsEl.innerHTML = _vsCardHtml(pair.a, 'a') + _vsCardHtml(pair.b, 'b');
+  if (statusEl) statusEl.textContent = '';
+}
+
+async function _vsVote(side) {
+  if (window._VS.busy || !window._VS.pair) return;
+  const {a, b} = window._VS.pair;
+  const winner = side === 'a' ? a : b;
+  const loser  = side === 'a' ? b : a;
+  const url = _vsGetUrl();
+  const statusEl = document.getElementById('vs-status');
+  window._VS.busy = true;
+  if (statusEl) statusEl.textContent = 'Saving…';
+  const params = new URLSearchParams({
+    action: 'vote',
+    wid: winner.video_id, lid: loser.video_id,
+    wfilm: winner.film || '', lfilm: loser.film || '',
+    wteam: winner.display_team || winner.team || '',
+    lteam: loser.display_team || loser.team || '',
+    wevent: winner.event || '', levent: loser.event || ''
+  });
+  try {
+    await fetch(url + '?' + params.toString());
+    if (statusEl) statusEl.innerHTML = '<span style="color:#6ee7b7">✓ Vote saved!</span>';
+  } catch(e) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#f87171">⚠ Could not save — check URL in settings.</span>';
+  }
+  window._VS.busy = false;
+  setTimeout(_vsRenderPair, 900);
+}
+
+function _vsSkip() {
+  if (window._VS.busy) return;
+  _vsRenderPair();
+}
+
+async function _vsLoadRankings() {
+  const url = _vsGetUrl();
+  const el = document.getElementById('vs-rankings-list');
+  const btn = document.getElementById('vs-rank-btn');
+  if (!el) return;
+  el.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">Loading…</p>';
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(url + '?action=rankings&_t=' + Date.now());
+    const data = await res.json();
+    const {elos, wins, losses, total} = data;
+    const filmMap = {};
+    _vsFilms().forEach(f => { filmMap[f.video_id] = f; });
+    const ranked = Object.entries(elos || {})
+      .filter(([id]) => filmMap[id])
+      .sort((x, y) => y[1] - x[1]);
+    if (!ranked.length) {
+      el.innerHTML = '<p style="color:var(--text-dim);font-size:13px;">No votes recorded yet.</p>';
+    } else {
+      el.innerHTML = `<p style="color:var(--text-faint);font-size:12px;margin:0 0 10px;">${total} vote${total===1?'':'s'} recorded</p>` +
+        ranked.map(([id, elo], i) => {
+          const f = filmMap[id];
+          const w = (wins||{})[id] || 0, l = (losses||{})[id] || 0;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:8px;">
+            <div style="min-width:0;flex:1;">
+              <div style="font-weight:600;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i+1}. ${esc(f.film)}</div>
+              <div style="font-size:11px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(f.display_team||f.team)} · ${f.year}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-size:14px;font-weight:700;color:var(--accent);">${Math.round(elo)}</div>
+              <div style="font-size:11px;color:var(--text-faint);">${w}W ${l}L</div>
+            </div>
+          </div>`;
+        }).join('');
+    }
+  } catch(e) {
+    el.innerHTML = '<p style="color:#f87171;font-size:13px;">⚠ Could not load rankings. Check your Apps Script URL.</p>';
+  }
+  if (btn) btn.disabled = false;
+}
+
+function _vsInit() {
+  const url = _vsGetUrl();
+  const setupEl  = document.getElementById('vs-setup');
+  const arenaEl  = document.getElementById('vs-arena');
+  if (!setupEl || !arenaEl) return;
+  if (!url) {
+    setupEl.style.display = '';
+    arenaEl.style.display = 'none';
+  } else {
+    setupEl.style.display = 'none';
+    arenaEl.style.display = '';
+    _vsRenderPair();
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // that inline scripts apply synchronously (nav-sentinel/wrapper, header parallax
 // transform, page-body margin-top). refreshAndDownload() uses this snapshot so
 // the downloaded file is byte-close to the original source.
