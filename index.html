@@ -2176,36 +2176,48 @@ if (e.target.closest('#yt-download-btn')) refreshAndDownload();
 $('close-drawer').addEventListener('click',closeDrawer);
 $('scrim').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
-// Version button: tap = changelog, press-and-hold 3s on mobile = unlock Experimental tab
+// Version button: hold 3s = bar appears, hold 2s more = Experimental tab unlocks
 (function(){
   const btn = document.getElementById('version-btn');
-  let holdTimer = null;
+  let phase1Timer = null; // fires at 3s — shows progress bar
+  let phase2Timer = null; // fires at 5s — unlocks tab
   let holdFired = false;
   let progressEl = null;
 
   function isMobile(){ return window.matchMedia('(hover:none) and (pointer:coarse)').matches; }
 
-  function startHold(e){
-    if (!isMobile()) return;
-    holdFired = false;
-    progressEl = document.createElement('span');
-    progressEl.style.cssText = 'position:absolute;inset:0;border-radius:10px;overflow:hidden;pointer-events:none;';
-    const fill = document.createElement('span');
-    fill.style.cssText = 'position:absolute;bottom:0;left:0;width:0%;height:100%;background:rgba(110,231,183,0.22);transition:width 3s linear;';
+  function showProgressBar(){
+    // Build a fixed-position bar that overlays the button from the outside — no DOM children added to btn
+    const rect = btn.getBoundingClientRect();
+    progressEl = document.createElement('div');
+    progressEl.style.cssText = [
+      'position:fixed',
+      'top:' + (rect.top + window.scrollY) + 'px',
+      'left:' + rect.left + 'px',
+      'width:' + rect.width + 'px',
+      'height:' + rect.height + 'px',
+      'border-radius:10px',
+      'overflow:hidden',
+      'pointer-events:none',
+      'z-index:9999'
+    ].join(';');
+    const fill = document.createElement('div');
+    fill.style.cssText = 'position:absolute;inset:0;width:0%;background:rgba(110,231,183,0.30);transition:width 2s linear;';
     progressEl.appendChild(fill);
-    btn.style.position = 'relative';
-    btn.appendChild(progressEl);
-    requestAnimationFrame(()=>{ fill.style.width = '100%'; });
-    holdTimer = setTimeout(()=>{
-      holdFired = true;
-      unlockExperimental();
-      cancelHold();
-    }, 3000);
+    document.body.appendChild(progressEl);
+    // Kick off the 2s fill animation
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ fill.style.width = '100%'; }); });
   }
 
-  function cancelHold(){
-    if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+  function cancelProgress(){
     if (progressEl && progressEl.parentNode){ progressEl.parentNode.removeChild(progressEl); progressEl = null; }
+  }
+
+  function cancelAll(){
+    if (phase1Timer){ clearTimeout(phase1Timer); phase1Timer = null; }
+    if (phase2Timer){ clearTimeout(phase2Timer); phase2Timer = null; }
+    cancelProgress();
+    holdFired = false;
   }
 
   function goExperimental(){
@@ -2216,15 +2228,32 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
     render();
   }
 
+  function startHold(e){
+    if (!isMobile()) return;
+    holdFired = false;
+    // Phase 1: after 3s, show the loading bar
+    phase1Timer = setTimeout(()=>{
+      phase1Timer = null;
+      showProgressBar();
+      // Phase 2: after 2s more, unlock
+      phase2Timer = setTimeout(()=>{
+        phase2Timer = null;
+        holdFired = true;
+        cancelProgress();
+        unlockExperimental();
+      }, 2000);
+    }, 3000);
+  }
+
   btn.addEventListener('touchstart', startHold, {passive:true});
   btn.addEventListener('touchend', function(e){
     if (isMobile()){
       const wasHeld = holdFired;
-      cancelHold();
+      cancelAll();
       if (!wasHeld) openChangelog();
-    } else { cancelHold(); }
+    } else { cancelAll(); }
   }, {passive:true});
-  btn.addEventListener('touchcancel', cancelHold, {passive:true});
+  btn.addEventListener('touchcancel', function(){ cancelAll(); }, {passive:true});
   btn.addEventListener('click', function(e){
     if (!isMobile()) openChangelog();
   });
