@@ -29,7 +29,7 @@ bg.appendChild(col);
 }
 })();</script>
 
-<button id="version-btn" aria-label="View changelog">v1.18</button>
+<button id="version-btn" aria-label="View changelog">v1.19</button>
 <div class="brand">
 <button id="home-btn" onclick="location.reload();" aria-label="Go to Events home" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;width:auto;-webkit-tap-highlight-color:transparent;">
 <div class="logo-title" style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;line-height:1;width:auto">
@@ -451,13 +451,19 @@ let top = 0;
 let el = mainEl;
 while (el) { top += el.offsetTop; el = el.offsetParent; }
 const tabsH = wrapper ? wrapper.offsetHeight : 0;
-window.scrollTo({top: top - tabsH, behavior: 'instant'});
+const targetScrollY = top - tabsH;
+const minPageH = targetScrollY + window.innerHeight;
+if (document.documentElement.scrollHeight < minPageH){
+mainEl.style.minHeight = (mainEl.offsetHeight + (minPageH - document.documentElement.scrollHeight)) + 'px';
+}
+window.scrollTo({top: targetScrollY, behavior: 'instant'});
+mainEl.style.minHeight = '';
 }
 function render(){
 const filtered = getFiltered();
 document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===state.view));
 const sortEl = $('sort');
-const isStats = state.view==='stats';
+const isStats = state.view==='stats'||state.view==='experimental';
 sortEl.disabled = isStats;
 sortEl.style.opacity = isStats ? '0.4' : '';
 sortEl.style.cursor = isStats ? 'not-allowed' : '';
@@ -473,6 +479,7 @@ else if (state.view==='teams') main.innerHTML = renderRollup(filtered,s=>[s.team
 else if (state.view==='awards') main.innerHTML = renderRollup(filtered,s=>s.awards,'award');
 else if (state.view==='events') main.innerHTML = renderEvents(filtered);
 else if (state.view==='stats') main.innerHTML = renderStats(filtered);
+else if (state.view==='experimental') main.innerHTML = renderExperimental();
 main.querySelectorAll('.card[data-id]').forEach(el=>
 el.addEventListener('click',()=>openSubmission(+el.dataset.id))
 );
@@ -589,7 +596,7 @@ entries.sort((a,b)=>(nameMatchScore(b[0]) - nameMatchScore(a[0]))||Math.min(...b
 }else{
 entries.sort((a,b)=>(nameMatchScore(b[0]) - nameMatchScore(a[0]))||b[1].length - a[1].length||a[0].localeCompare(b[0]));
 }
-return `<div class="grid-2">${entries.map(([name,subs])=>{
+return `<div class="grid-2"${kind==='award' ? ' style="padding-bottom:100vh"' : ''}>${entries.map(([name,subs])=>{
 const yrs = [...new Set(subs.map(s=>s.year))].sort((a,b)=>b-a);
 const yrRange = yrs.length===1 ? yrs[0] : `${Math.min(...yrs)}–${Math.max(...yrs)}`;
 let extra = '';
@@ -664,6 +671,19 @@ return `<div class="event-card" data-kind="event" data-key="${esc(g.name)}|${g.y
 }).join('')}</div>`;
 }
 const YT_BAKED = {"fetched":"May 23, 2026","views":{"Hrd_w48TJO0":420,"NHNIShS4HvY":155,"b2_8p-MFH5g":50,"F9btI8YiYCs":126,"f_7EaD-QkLI":326,"5GQTdW3g_lk":79,"PS1yYhKbkiU":134,"kSoqvu8mSio":159,"Mw7uVN1ptiM":113,"c-VimQslsNs":104,"4inazpaxhJE":691,"fJH4hvTet48":35,"WTHKJYq1sg8":92,"NaIbQ91imHQ":113,"iOPDLDKIGQE":111,"07DNj36ZlIc":320,"Bdx_Hb6dDy4":266,"4cZidOMfex4":38,"pocZXfjwK10":108,"jY_I8j0Y5C0":216,"vlO3YgcvYOQ":94,"qT53wLsZ5bw":359,"9IZJo9P3gAw":48,"zY23xMRCJ5s":63,"OKMhHTA4Lcw":73,"Db-fjfQUGao":90,"YYfH_s94R7Q":115,"x0avRB-OMo4":158,"zSs9LG8gAdE":451,"zYGh7e6XWpI":168,"xDO8SPBOZ6s":98,"z18-kcFh9zU":688,"zTFCbsAWAhM":107,"u0zGfjvQVvs":161,"pbrBdpwSgN0":61,"nxWwrsN2Obw":88,"h1UgBN8iuec":90,"lAEYIqXx2Zk":112,"ZpcKpvr5boA":90,"XtzMwjPVKlc":60,"XKycLSgjV-o":94,"TTC62XFbIcg":304,"PmKZdAF9kqY":226,"KEJv7dcgky4":93,"BveR4_B7rNc":48,"GwXn9KFh3xI":70,"2sapMBwtCLc":93,"y12VSmhEQnA":114,"E1C-N_OWYi4":66,"5sz_qrstNEw":651,"nDrdBjsoNq0":220,"Do57n_qO_Uc":142,"5jjXgbDghgA":101,"x3_rYre8ubU":245,"qM24ZpeeSdE":84,"LVttlngDvD0":829,"vfJva9HJk9c":217,"FgI3L-1_-tM":158,"07GK3uXglUY":316,"EK1gbpNq3no":91,"Xygvd3kaepo":505,"llZjB-kJyEs":549,"t1KNuu1eLzQ":274,"es7-W9Q4Bqc":119,"uG2NMLdNMVA":80,"bLYGmdwyyT8":265,"5xG6_3MHk44":85,"Jbfomy4axSQ":262,"Dog4PJvT3_E":109,"hPdKENwCKkc":352,"_cTjmEak8cA":630,"w1eQjmc1Avc":496,"Jum5BjKrpW8":309,"jy4koSg-cBA":158,"2F-zfV-pDg0":118,"KbeaghVP4Co":42086,"ZqToMjT179s":154,"Et4ajYoggT8":189,"G6NL8YE5u5g":86,"7GDkKN0vuno":140,"JpDG2hF08SU":82,"yI8c249NmAU":241,"wC7CbfUhcu8":49,"k_0E_B_PAYU":32,"FmuaoTr_fss":87,"y7bgAjw48IU":97,"1ZI7aymSjnQ":224,"Kkt7eNkdWU0":175,"M9LWMyinNV4":138,"Xfi81eCiiWo":224,"Od2pFyA1K54":68,"I9e5ept-Ds8":97,"HttUB3-itXU":137,"KxJ_qA6CuyM":251,"L2qmDbt0nqI":231,"RqB-LyoBxKE":76,"NnCoye4zm6w":398,"aovINJX2GyQ":259,"YAWbBraAxOc":269,"ZQaQxzeS9no":96,"uR59zRMrHY0":161,"94Vum2p-uZ0":98,"CIyPxSISnMk":685,"cuA1pwiPDZE":124,"nlcX9DkSwSg":151,"U95ooA_8iG4":262,"eWQtp9ueeho":594,"VH5xAdqW9tI":379,"0o-ZEc7p6mc":1029,"hvNFMDJn9qM":431,"IK67XcaWNsg":56,"nyAehx8pQeM":128,"R1stzLWyig8":214,"VNdFb5KiFUs":87,"TbFLYvHv-GA":60,"JNuOP3Dm3SU":110,"wu8q391IrS4":157,"y2lSeJzFw-o":37,"JvDGs-Y0rNA":275,"8XjpRfV9p5s":333,"nBTJfg6CPm4":119,"BNp-bw6c8X8":562,"x7QkbvuXKRg":265,"KQCdGWxd7Bw":826,"o6jayBXxuN4":315,"3OiRZlS7eWk":947,"_FJNBBMfT-M":1346,"jJhmQ2F_brA":127,"nnuOO_zFbnI":308,"utIb4gPNSOE":192,"g7dUYqhGwN4":132,"0deaIw8qvTM":410,"35aSxASC8IQ":98,"U5K_zoZzAo4":1470,"16-Z2xewxpY":138,"9STsnK0n0nc":1816,"9wn0my98ifc":946,"qqQ9JOlPwLQ":515,"rJqQKO7kJno":584,"tVWDZuEv9MM":628,"EyKZkgBwfls":223,"u1eqrhYnkII":229,"Rew8kQyKrUg":146,"MuBr7hTmh78":141,"B2w0s6yvQcg":250,"gUruGEpkPe0":275,"731cCmRrqTQ":1300,"02brN8WNjx8":260,"Pb28Kk8iz6w":163,"YRwEPrS69ZQ":223,"XI35aAT7kSY":153,"zJPTMWjfLjI":178,"Gx9QhO5ST_I":594,"SUEDVxjJwGA":232,"3loYt8MnyRo":967,"Qbtdb5OmL5c":220,"moR91lBR3us":326,"usxruh2dJdE":168,"pGAdWQZfg6o":261,"uzwKccud3JE":122,"R5NgWhp1Egg":613,"BKFOroGcJ1k":206,"ldyXgMLq7qo":362,"Bu1qNMYWinE":113,"2QWvtsAnFcw":116,"jlRuXYW49m0":149,"8W_ox_SdJ54":134,"DM_bZZHzcSk":54,"Bs8DBELqE6Q":187,"flTbxrOffho":71,"wJNy1QYlpY4":67,"aSHINA8GKNk":157,"70xT1gzz484":120,"pAuKpzJ7Fxc":92,"U7E6mb7J3D0":187,"2Zb_ztigjtc":74,"gBWFECciOpQ":112,"6WvUhwI9bOk":94,"uYaaxriuNaY":204,"bfanG7DvC1A":39,"zpks_xepVYo":81,"OGftF8Ie8hY":91,"f8RbGP_iphg":140,"SFwXXdyd5oE":212,"xWxajbbi5ns":121,"2HE8NEr_Q00":205,"-hCthLSUqIo":107,"xW79WewDLiY":50,"Zyt009fNQ_g":205,"FCW9C1C65oc":399,"SUqoS2yvPkk":82,"O6qzeREgm14":562,"k4r4c_lVKtM":532,"rDWfjDdYYOY":150,"ukuZGLWYiig":271,"0zy1U360JNQ":330,"93pBpR4tOFw":205,"0axXMs0OWrw":223,"sIYKZJQB_-E":66,"Idh057Fa8qM":57,"7l5_c_JLh4w":706,"xmezJzO5pqE":1018,"d80Ur6ChkW0":436,"B9nHT1jznVc":63,"phEC78i0TPE":95,"M8GIfO4-m0A":157,"wXNTVJQLxRM":174,"6NBH_nHYLKE":319,"ZfwQxxNDCRo":92,"LSCFfAOa-Zw":359,"XHR3y2poDww":845,"vUf5gE3lFh4":108,"wQhDqbLyGCM":120,"O-LsIN4aZY4":78,"Hmq651hGtRM":65,"Peq0eHVRRcI":184,"eu_XUj_l4-0":130,"E95LYkvi9Cs":71,"hxYKYS6XSiM":197,"6YUPJ9r4bug":214,"WphwOirFGCo":91,"IeAAzR9KTlg":78,"HWAasEhSov4":1202,"CeMvoEyI02Q":92,"gpvoAaukFpc":412,"QZxf3-tTcsY":530,"y4SpxOHUzuI":680,"wpPrH1kVx-8":269,"Z4ADFOH0e-c":1295,"tHr6muSGM7E":471,"Dk8LXMhOC-E":276,"rkxqBkCOHws":6857,"_frrlaTByyU":197,"riaCBdfZMOM":148,"EuXkH97h0LQ":185,"0zn9ogAuvYY":320,"rvbZ43x2Du4":176,"TIgPwzMhOd0":328,"4Jn0tDIRdC0":152,"CPnMxqA8ryA":134,"JiC03W01CLY":109,"99cWHByvxDQ":41,"-nuOL1POqZ8":275,"lGX-ZhPXTlE":86,"rUNmuZbdAkg":76,"EO1UJJdGvQA":51,"NMYtaV6jzS4":550,"oe7Xc4PdVl4":163,"y78Z-bpFrfE":108,"dHNnKytpzXs":113,"msk9VRBy9Ww":168,"Hgf9VgvsHH4":400,"GjZxbXcc9FY":138,"TwcvUVQX7CM":124,"s45ARdp_3A8":394,"M1CSO8xtUDQ":70,"5UvrXC5nGc8":72,"3TIpQtQbb64":134,"Zp18OLCan6M":254,"82cLQebzA9A":991,"NyPkHrA_Jsk":329,"YJoA5n1wOtc":307,"102Wz4bSL6c":353,"ZRiSvRSgqaQ":193,"7CGtBSsUAX8":347,"TXNGgQsLYtg":235,"pyppTIhFvvc":1543,"3Ulfl-hOuxU":320,"rBFrW5xe21s":295,"MR7fm6E8IbQ":586,"RtLOjGdN4yQ":397,"rBBrdzSRxRQ":893,"SF4VAEnbw2I":166,"slvCzPw84o8":177,"Vb11H2G7VKQ":434,"ZCkY7cw-n1Q":116,"znFAN5wUH3s":154,"EPgV47Wr7UY":35,"Zgrxf6sdX1c":312,"lOCVN5wM848":362,"o34GOfcaWC0":52,"LX6-xwdNzTc":33,"OmsnN14AQec":46,"jP6LrYfs0k4":99,"7q3NNPuceXo":116,"IJe1NXmsrmY":68,"Tt-lmIinO9c":76,"sV9rzgIyShc":160,"028ezcLjC9Q":62,"-t5TUTKgAJ8":93,"j_7uRqEAIbc":92,"ELlm6r1XdJQ":595,"s93Z8-aMjR0":175,"HqkwtAl0huU":180,"T9Q8etwK2NA":128,"FIJj8I0srD4":118,"tcgc2URVuVk":286,"Nv1o0BGDmuc":307,"Akq1nqlwoZU":514,"KjruFqXnsfo":206,"Y4CPrEOuWz0":189,"SccQLOBwit0":94,"eEXgessACWU":887,"QD4lRkWGmHg":169,"qy3f79xWJ74":619,"qMB8vjUkpok":577,"C8wfhl_L5Ag":291,"5cgCLaZGF_Q":910,"mpb03vj70Jw":324,"5kPfiyzqmIc":781,"yJ_leWdf8hM":441,"c7iZRYrakhU":1725,"E6uiJt28Dcc":205,"2xISlCv4j-I":195,"7pshklvUYqU":133,"6zZjHLGoE8U":130,"xh3glVGTmgY":530,"9mTP7jDY5Z4":193,"DUkYKXOoTyY":720,"TR3oXELYi6Q":358,"raRUMuFXIeI":770,"_h_lwaubTGY":170,"XGkdSp6MZ4U":100,"pr838brFU18":676,"YKbRCooMltc":78,"K0Dxon1rJ3A":109,"gz_81d1C7Jg":145,"X7SWTTb-LGU":166,"vzOfpBzAmVc":432,"XjMxIobljzU":273,"OZyGT34jBEo":131,"ah3KDLsB4q4":146,"sxjK9UzAmIc":69,"1hFKEEP1N28":113}};
+let YT_LIVE = null; // caches live-fetched view data so it survives tab switches
+function renderExperimental(){
+  return `<div style="padding:32px 0;text-align:center;">
+    <div style="font-size:48px;margin-bottom:12px;">⚗️</div>
+    <h2 style="color:var(--green);margin:0 0 8px;font-size:22px;letter-spacing:0.04em;">Experimental</h2>
+    <p style="color:var(--text-dim);max-width:320px;margin:0 auto 24px;line-height:1.6;font-size:14px;">
+      You found the secret lab. Features here are experimental and may be unstable.
+    </p>
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(110,231,183,0.07);border:1px solid rgba(110,231,183,0.25);color:var(--green);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:0.04em;">
+      🧪 More experiments coming soon
+    </div>
+  </div>`;
+}
 function renderStats(filtered){
 function topMap(getter,n=10){
 const m = new Map();
@@ -916,11 +936,12 @@ el.addEventListener('click',()=>openRollup(el.dataset.kind,el.dataset.key))
 document.querySelectorAll('.panel[data-stat]').forEach(panel=>
 panel.addEventListener('click',e=>{
 if (e.target.closest('.leader[data-kind]')) return;
-openStatDrawer(panel.dataset.stat,panel.querySelector('h3').textContent.trim());
+openStatDrawer(panel.dataset.stat,[...panel.querySelector('h3').childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim());
 })
 );
 },0);
-if (YT_BAKED) setTimeout(()=>renderYtViews(DATA.submissions,YT_BAKED.views),0);
+if (YT_LIVE) setTimeout(()=>renderYtViews(DATA.submissions,YT_LIVE.viewMap,YT_LIVE.originalViews),0);
+else if (YT_BAKED) setTimeout(()=>renderYtViews(DATA.submissions,YT_BAKED.views),0);
 return `
 <div class="panels">
 ${section('Prolific &amp; long-running')}
@@ -955,7 +976,7 @@ ${barChart(newPerYearSorted)}
 ${section('YouTube')}
 <div class="panel" id="yt-views-panel"><h3>Most viewed films &#9654;&#65039;</h3>
 <div id="yt-views-meta" style="font-size:11px;color:var(--text-faint);margin-bottom:10px">
-${YT_BAKED ? 'Last updated ' + YT_BAKED.fetched : 'View counts not yet loaded'}
+${(YT_LIVE||YT_BAKED) ? 'Last updated ' + (YT_LIVE ? YT_LIVE.fetched : YT_BAKED.fetched) : 'View counts not yet loaded'}
 </div>
 <div id="yt-views-list">
 ${YT_BAKED ? '' : '<div style="color:var(--text-faint);font-size:13px">Click “Fetch &amp;Lock” to load YouTube view counts and bake them into this file.</div>'}
@@ -1049,7 +1070,7 @@ memberTotals.set(m,mt);
 }
 if (s.event){
 const key = `${s.event}|${s.year}`;
-const e = eventTotals.get(key)||{views: 0,origViews: (origV!==null ? 0 : null),films: 0,displayName: `${s.event}(${s.year})`};
+const e = eventTotals.get(key)||{views: 0,origViews: (origV!==null ? 0 : null),films: 0,displayName: `${s.event} (${s.year})`};
 e.views+=v;
 if (origV!==null){if (e.origViews===null) e.origViews = 0;e.origViews+=origV;}
 e.films+=1;
@@ -1140,7 +1161,7 @@ const maxDelta = deltas[0].delta;
 chartEl.innerHTML = deltas.map(({s,delta,total},i)=>{
 const barWidth = Math.round((delta / maxDelta) * 100);
 const label = s.film||'Untitled';
-const sub = `${s.display_team||s.team}· ${s.year}`;
+const sub = `${s.display_team||s.team} · ${s.year}`;
 return `
 <div class="leader" data-id="${s.id}" style="cursor:pointer;display:block;padding:6px 0;border-bottom:1px solid var(--border)">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:8px">
@@ -1206,6 +1227,7 @@ return null;
 const now = new Date();
 const fetched = now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 const originalViews = (YT_BAKED&&YT_BAKED.views) ? YT_BAKED.views : null;
+YT_LIVE = {viewMap, originalViews, fetched};
 renderYtViews(DATA.submissions,viewMap,originalViews);
 if (meta) meta.textContent = 'Last updated ' + fetched;
 if (fetchBtn){fetchBtn.disabled = false;fetchBtn.innerHTML = '&#8635; Refresh';}
@@ -1481,7 +1503,7 @@ rowsHtml = rows.map(([name,n],i)=>`
 const html = `
 <div class="body">
 <h2>${esc(title)}</h2>
-<div style="color:var(--text-dim);margin-top:4px;margin-bottom:16px">${rows.length}${kind==='award' ? 'categories' : kind + 's'}</div>
+<div style="color:var(--text-dim);margin-top:4px;margin-bottom:16px">${rows.length} ${kind==='award' ? 'categories' : kind + 's'}</div>
 ${rowsHtml}
 </div>`;
 showDrawer(html,{type: 'stat',statKey,title});
@@ -1529,7 +1551,7 @@ return `
 }).join('');
 }
 const count = list.length;
-const subtitle = kind==='films' ? `${count} film${count!==1?'s':''}` : `${count}${kind}${count!==1?'s':''}`;
+const subtitle = kind==='films' ? `${count} film${count!==1?'s':''}` : `${count} ${kind}${count!==1?'s':''}`;
 const html = `
 <div class="body">
 <h2>${esc(title)}</h2>
@@ -1542,6 +1564,19 @@ resetDrawerTheme();
 }
 function openChangelog(){
 const changes = [
+{
+date: '2026-05-24',
+version: 'v1.19',
+items: [
+'Fixed missing spaces in the Most New Views panel between team names and the middle dot separator (e.g. "Hell Toupee· 2025" → "Hell Toupee · 2025").',
+'Fixed missing spaces between count and label in stat "See all" drawer subtitles (e.g. "142members" → "142 members").',
+'Fixed stat panel "See all" drawer titles including the "See all ›" label text (e.g. "Most prolific members See all ›" → "Most prolific members").',
+'Fixed clicking a YouTube stats panel "See all" drawer causing the page to scroll back to the top. The body scroll-lock is now only applied when the drawer is first opened, not on subsequent in-drawer navigation.',
+'Fixed missing spaces in YouTube stats "Most Viewed Events" panel and drawer: event names now display as "Sweded (2024)" instead of "Sweded(2024)", and the drawer subtitle now reads "27 events" instead of "27events".',
+'Fixed tab-switch scroll bug on desktop where switching to the Awards tab (which has few entries) would scroll the page above the tab bar. The scroll target is now always reachable by temporarily extending page height if needed.',
+'Fixed: Refreshed YouTube view counts are now preserved when switching tabs. Previously, navigating away from the Stats tab and back would clear the live-fetched counts, requiring a second refresh. A module-level cache (YT_LIVE) now holds the most recently fetched data and re-populates the panels on every Stats re-render.',
+]
+},
 {
 date: '2026-05-24',
 version: 'v1.18',
@@ -1755,7 +1790,7 @@ items: [
 const html = `
 <div class="body">
 <h2>Changelog</h2>
-<div style="color:var(--text-dim);margin-top:4px;margin-bottom:20px">Cinemadrome Archive · <span style="color:var(--accent);font-weight:700">v1.18</span></div>
+<div style="color:var(--text-dim);margin-top:4px;margin-bottom:20px">Cinemadrome Archive · <span style="color:var(--accent);font-weight:700">v1.19</span></div>
 ${changes.map(({date,version,items})=>`
 <div style="margin-bottom:24px">
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -1817,7 +1852,8 @@ btn.innerHTML = collapsed
 function showDrawer(html,pushHistory){
 const prevBody = $('drawer-body');
 const prevLayer = $('drawer-prev');
-if ($('drawer').classList.contains('open')&&pushHistory){
+const wasOpen = $('drawer').classList.contains('open');
+if (wasOpen&&pushHistory){
 prevLayer.innerHTML = prevBody.innerHTML;
 prevLayer.scrollTop = $('drawer').scrollTop;
 if (window._drawerPrevTitleObs) window._drawerPrevTitleObs.disconnect();
@@ -1852,12 +1888,14 @@ const titleBar = `<div class="drawer-title-bar" id="drawer-title-bar">
 prevBody.innerHTML = titleBar + backBtn + html;
 $('drawer').classList.add('open');
 $('scrim').classList.add('open');
+if (!wasOpen){
 const scrollY = window.scrollY;
 document.body.style.position = 'fixed';
 document.body.style.top = `-${scrollY}px`;
 document.body.style.left = '0';
 document.body.style.right = '0';
 document.body.dataset.scrollY = scrollY;
+}
 $('drawer').scrollTop = 0;
 const _posterReset = $('drawer-body').querySelector('.event-drawer-poster img');
 if (_posterReset) _posterReset.style.transform = 'translateY(0)';
@@ -2138,7 +2176,85 @@ if (e.target.closest('#yt-download-btn')) refreshAndDownload();
 $('close-drawer').addEventListener('click',closeDrawer);
 $('scrim').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
-document.getElementById('version-btn').addEventListener('click',openChangelog);
+// Version button: tap = changelog, press-and-hold 3s on mobile = unlock Experimental tab
+(function(){
+  const btn = document.getElementById('version-btn');
+  let holdTimer = null;
+  let holdFired = false;
+  let progressEl = null;
+
+  function isMobile(){ return window.matchMedia('(hover:none) and (pointer:coarse)').matches; }
+
+  function startHold(e){
+    if (!isMobile()) return;
+    holdFired = false;
+    progressEl = document.createElement('span');
+    progressEl.style.cssText = 'position:absolute;inset:0;border-radius:10px;overflow:hidden;pointer-events:none;';
+    const fill = document.createElement('span');
+    fill.style.cssText = 'position:absolute;bottom:0;left:0;width:0%;height:100%;background:rgba(110,231,183,0.22);transition:width 3s linear;';
+    progressEl.appendChild(fill);
+    btn.style.position = 'relative';
+    btn.appendChild(progressEl);
+    requestAnimationFrame(()=>{ fill.style.width = '100%'; });
+    holdTimer = setTimeout(()=>{
+      holdFired = true;
+      unlockExperimental();
+      cancelHold();
+    }, 3000);
+  }
+
+  function cancelHold(){
+    if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+    if (progressEl && progressEl.parentNode){ progressEl.parentNode.removeChild(progressEl); progressEl = null; }
+  }
+
+  function goExperimental(){
+    state.view = 'experimental';
+    state.sort = 'default';
+    preSearchView = null;
+    scrollToTabs();
+    render();
+  }
+
+  btn.addEventListener('touchstart', startHold, {passive:true});
+  btn.addEventListener('touchend', function(e){
+    if (isMobile()){
+      const wasHeld = holdFired;
+      cancelHold();
+      if (!wasHeld) openChangelog();
+    } else { cancelHold(); }
+  }, {passive:true});
+  btn.addEventListener('touchcancel', cancelHold, {passive:true});
+  btn.addEventListener('click', function(e){
+    if (!isMobile()) openChangelog();
+  });
+
+  function unlockExperimental(){
+    if (!document.querySelector('.tab[data-view="experimental"]')) {
+      const statsTab = document.querySelector('.tab[data-view="stats"]');
+      if (!statsTab) return;
+      const expTab = document.createElement('button');
+      expTab.className = 'tab';
+      expTab.dataset.view = 'experimental';
+      expTab.innerHTML = '⚗️ Experimental';
+      expTab.style.color = 'var(--green)';
+      statsTab.parentNode.insertBefore(expTab, statsTab.nextSibling);
+      expTab.addEventListener('click', ()=>{
+        preSearchView = null;
+        state.view = 'experimental';
+        state.sort = 'default';
+        scrollToTabs();
+        render();
+      });
+      expTab.style.animation = 'expUnlock 0.5s ease';
+      const style = document.createElement('style');
+      style.textContent = '@keyframes expUnlock{0%{opacity:0;transform:translateY(6px) scale(0.85)}70%{opacity:1;transform:translateY(-2px) scale(1.05)}100%{transform:translateY(0) scale(1)}}';
+      document.head.appendChild(style);
+      if (navigator.vibrate) navigator.vibrate([40,30,80]);
+    }
+    setTimeout(goExperimental, 100);
+  }
+})();
 (function (){
 const drawer = $('drawer');
 const COMMIT_DISTANCE = 0.22;
@@ -2295,6 +2411,7 @@ else if (view==='teams')   el.innerHTML = renderRollup(filtered,s=>[s.team],'tea
 else if (view==='awards')  el.innerHTML = renderRollup(filtered,s=>s.awards,'award');
 else if (view==='events')  el.innerHTML = renderEvents(filtered);
 else if (view==='stats')   el.innerHTML = renderStats(filtered);
+else if (view==='experimental') el.innerHTML = renderExperimental();
 state.view = saved;
 }
 function setTrackImmediate(px,onDone){
