@@ -2432,6 +2432,13 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
       // Swap header collage to cats
       const catImgUrls = ['https://i.imgur.com/BGdh49r.jpeg','https://i.imgur.com/2FZhDeE.jpeg','https://i.imgur.com/YCVwEbF.jpeg'];
       const collageBg = document.getElementById('header-collage-bg');
+      // Save original srcs for restoration later
+      if (collageBg && !window.__originalCollageSrcs) {
+        window.__originalCollageSrcs = [];
+        Array.from(collageBg.children).forEach(function(col) {
+          Array.from(col.children).forEach(function(img) { window.__originalCollageSrcs.push(img.src); });
+        });
+      }
       if (collageBg) {
         // Build a shuffled flat list so no two adjacent cells get the same cat
         const totalCells = Array.from(collageBg.children).reduce(function(n,col){return n+col.children.length;},0);
@@ -2588,6 +2595,308 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
       }
       let hintHidden = false;
 
+      // ── Trophy milestone overlays ──
+      function showBronzeTrophy() {
+        // Bronze trophy in top-left
+        const trophyDiv = document.createElement('div');
+        trophyDiv.id = 'mini-trophy-bronze';
+        Object.assign(trophyDiv.style, {
+          position:'fixed', top:'10px', left:'12px', zIndex:'200000',
+          fontSize:'32px', lineHeight:'1',
+          animation:'trophyAppear 0.5s ease forwards',
+          pointerEvents:'none',
+          filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+        });
+        trophyDiv.textContent = '🥉';
+        document.body.appendChild(trophyDiv);
+
+        // Animated "Wow!" in center
+        const wowDiv = document.createElement('div');
+        Object.assign(wowDiv.style, {
+          position:'fixed', top:'50%', left:'50%',
+          transform:'translate(-50%,-50%)',
+          zIndex:'200001', pointerEvents:'none',
+          color:'#fff', fontSize:'clamp(48px,10vw,90px)', fontWeight:'900',
+          fontFamily:'inherit', letterSpacing:'-0.02em',
+          textShadow:'0 4px 24px rgba(0,0,0,0.7), 0 0 40px rgba(255,180,0,0.8)',
+          animation:'wowPop 2s ease forwards',
+          whiteSpace:'nowrap',
+        });
+        wowDiv.textContent = 'Wow!';
+        document.body.appendChild(wowDiv);
+        setTimeout(() => wowDiv.remove(), 2000);
+
+        if (!document.getElementById('trophy-kf-style')) {
+          const kfStyle = document.createElement('style');
+          kfStyle.id = 'trophy-kf-style';
+          kfStyle.textContent = `
+            @keyframes trophyAppear{0%{opacity:0;transform:scale(0.3) rotate(-20deg)}60%{transform:scale(1.3) rotate(5deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+            @keyframes wowPop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}35%{transform:translate(-50%,-50%) scale(0.95)}50%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+            @keyframes amazingPop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.4) rotate(-5deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.2) rotate(2deg)}35%{transform:translate(-50%,-50%) scale(0.95) rotate(0deg)}60%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}90%{opacity:0.8;transform:translate(-50%,-50%) scale(1.4) rotate(8deg)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.5) rotate(15deg)}}
+            @keyframes silverUpgrade{0%{transform:scale(1)}30%{transform:scale(1.6) rotate(15deg)}60%{transform:scale(0.9) rotate(-5deg)}100%{transform:scale(1) rotate(0deg)}}
+          `;
+          document.head.appendChild(kfStyle);
+        }
+      }
+
+      function showSilverTrophy() {
+        // Upgrade existing bronze to silver
+        const existing = document.getElementById('mini-trophy-bronze');
+        if (existing) {
+          existing.id = 'mini-trophy-silver';
+          existing.textContent = '🥈';
+          existing.style.animation = 'silverUpgrade 0.6s ease forwards';
+          setTimeout(() => { existing.style.animation = ''; }, 700);
+        } else {
+          const trophyDiv = document.createElement('div');
+          trophyDiv.id = 'mini-trophy-silver';
+          Object.assign(trophyDiv.style, {
+            position:'fixed', top:'10px', left:'12px', zIndex:'200000',
+            fontSize:'32px', lineHeight:'1',
+            animation:'trophyAppear 0.5s ease forwards',
+            pointerEvents:'none',
+            filter:'drop-shadow(0 2px 6px rgba(0,0,0,0.5))',
+          });
+          trophyDiv.textContent = '🥈';
+          document.body.appendChild(trophyDiv);
+        }
+
+        // Animated "AMAZING!" that explodes away
+        const amazDiv = document.createElement('div');
+        Object.assign(amazDiv.style, {
+          position:'fixed', top:'50%', left:'50%',
+          transform:'translate(-50%,-50%)',
+          zIndex:'200001', pointerEvents:'none',
+          color:'#fff', fontSize:'clamp(44px,9vw,84px)', fontWeight:'900',
+          fontFamily:'inherit', letterSpacing:'0.06em',
+          textShadow:'0 4px 24px rgba(0,0,0,0.7), 0 0 50px rgba(180,220,255,0.9)',
+          animation:'amazingPop 2.2s ease forwards',
+          whiteSpace:'nowrap',
+        });
+        amazDiv.textContent = 'AMAZING!';
+        document.body.appendChild(amazDiv);
+        setTimeout(() => amazDiv.remove(), 2200);
+      }
+
+      function triggerGoldTrophyFinale() {
+        // Stop launching new cats
+        if (catIntervalId) { clearInterval(catIntervalId); catIntervalId = null; }
+
+        // Remove all flying cat images
+        document.querySelectorAll('img').forEach(img => {
+          if (img.style.position === 'fixed' && parseFloat(img.style.zIndex) >= 99999) {
+            img.remove();
+          }
+        });
+
+        // Fade out the mini game overlay elements
+        [goalEl, levelEl, tallyEl, hintEl, quipEl].forEach(el => {
+          if (el && el.parentNode) {
+            el.style.transition = 'opacity 0.8s ease';
+            el.style.opacity = '0';
+            setTimeout(() => { if (el.parentNode) el.remove(); }, 900);
+          }
+        });
+        const silverTrophy = document.getElementById('mini-trophy-silver') || document.getElementById('mini-trophy-bronze');
+        if (silverTrophy) {
+          silverTrophy.style.transition = 'opacity 0.8s ease';
+          silverTrophy.style.opacity = '0';
+          setTimeout(() => silverTrophy.remove(), 900);
+        }
+
+        // After fade, show gold trophy spin + confetti + message
+        setTimeout(() => {
+          // Inject finale keyframes
+          const finaleStyle = document.createElement('style');
+          finaleStyle.textContent = `
+            @keyframes goldSpin{0%{opacity:0;transform:translate(-50%,-50%) scale(0.1) rotate(-360deg)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(15deg)}70%{transform:translate(-50%,-50%) scale(0.95) rotate(-5deg)}100%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(0deg)}}
+            @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+            @keyframes catsPajamasPop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}50%{transform:translate(-50%,-50%) scale(0.97)}65%{opacity:1;transform:translate(-50%,-50%) scale(1)}85%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.05)}}
+          `;
+          document.head.appendChild(finaleStyle);
+
+          // Big gold trophy in center
+          const goldTrophy = document.createElement('div');
+          Object.assign(goldTrophy.style, {
+            position:'fixed', top:'50%', left:'50%',
+            zIndex:'200010', pointerEvents:'none',
+            fontSize:'clamp(80px,18vw,160px)', lineHeight:'1',
+            animation:'goldSpin 1.2s cubic-bezier(0.175,0.885,0.32,1.275) forwards',
+            filter:'drop-shadow(0 0 40px rgba(255,215,0,0.9))',
+          });
+          goldTrophy.textContent = '🏆';
+          document.body.appendChild(goldTrophy);
+
+          // Confetti
+          const colors = ['#ff0000','#ff7700','#ffff00','#00ff00','#0088ff','#8b00ff','#ff00cc','#ffffff'];
+          for (let i = 0; i < 80; i++) {
+            const piece = document.createElement('div');
+            const size = 8 + Math.random() * 10;
+            Object.assign(piece.style, {
+              position:'fixed',
+              left: (Math.random() * 100) + 'vw',
+              top: '-20px',
+              width: size + 'px',
+              height: (size * (0.5 + Math.random())) + 'px',
+              background: colors[Math.floor(Math.random() * colors.length)],
+              borderRadius: Math.random() > 0.5 ? '50%' : '2px',
+              zIndex:'200009',
+              pointerEvents:'none',
+              animation: `confettiFall ${1.5 + Math.random() * 3}s ${Math.random() * 2}s ease-in forwards`,
+              transform: 'rotate(' + (Math.random()*360) + 'deg)',
+            });
+            document.body.appendChild(piece);
+            setTimeout(() => piece.remove(), 5500);
+          }
+
+          // "YOU ARE THE CAT'S PAJAMAS!!!" message after brief pause
+          setTimeout(() => {
+            const pajamasDiv = document.createElement('div');
+            Object.assign(pajamasDiv.style, {
+              position:'fixed', top:'50%', left:'50%',
+              zIndex:'200011', pointerEvents:'none',
+              color:'#fff',
+              fontSize:'clamp(20px,4.5vw,46px)',
+              fontWeight:'900', fontFamily:'inherit',
+              letterSpacing:'0.04em',
+              textShadow:'0 4px 24px rgba(0,0,0,0.85), 0 0 60px rgba(255,215,0,0.7)',
+              animation:'catsPajamasPop 3.5s ease forwards',
+              whiteSpace:'nowrap', textAlign:'center',
+              lineHeight:'1.15',
+              padding:'0 12px',
+            });
+            pajamasDiv.innerHTML = "YOU ARE THE<br>CAT'S PAJAMAS!!!";
+            document.body.appendChild(pajamasDiv);
+
+            setTimeout(() => pajamasDiv.remove(), 3600);
+
+            // After message fades: restore page to pre-TOPSECRET state
+            setTimeout(() => {
+              goldTrophy.style.transition = 'opacity 0.6s ease';
+              goldTrophy.style.opacity = '0';
+              setTimeout(() => goldTrophy.remove(), 700);
+
+              // Switch to Events tab
+              if (window.__VIEWS && window.__VIEWS.includes('experimental')) {
+                window.__VIEWS = window.__VIEWS.filter(v => v !== 'experimental');
+              }
+              // Remove TOPSECRET tab
+              const expTab = document.querySelector('.tab[data-view="experimental"]');
+              if (expTab) {
+                expTab.style.transition = 'opacity 0.5s ease';
+                expTab.style.opacity = '0';
+                setTimeout(() => expTab.remove(), 600);
+              }
+
+              // Revert header collage from cats back to movie posters
+              const collageBg = document.getElementById('header-collage-bg');
+              if (collageBg) {
+                const originalSrcs = window.__originalCollageSrcs;
+                if (originalSrcs) {
+                  let idx2 = 0;
+                  Array.from(collageBg.children).forEach(col => {
+                    Array.from(col.children).forEach(img => {
+                      if (originalSrcs[idx2]) img.src = originalSrcs[idx2];
+                      idx2++;
+                    });
+                  });
+                }
+              }
+
+              // Revert rainbow logos
+              ['logo-the','logo-archive'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.style.background=''; el.style.webkitBackgroundClip=''; el.style.backgroundClip=''; el.style.webkitTextFillColor=''; el.style.backgroundSize=''; el.style.animation=''; el.style.display=''; el.style.webkitTextStroke=''; }
+              });
+              document.querySelectorAll('.stat .n').forEach(el => {
+                el.style.background=''; el.style.webkitBackgroundClip=''; el.style.backgroundClip=''; el.style.webkitTextFillColor=''; el.style.backgroundSize=''; el.style.animation='';
+              });
+
+              // Switch to Events tab
+              if (typeof state !== 'undefined') {
+                state.view = 'events';
+                if (typeof render === 'function') render();
+              }
+
+              // Replace feedback button with persistent gold trophy
+              const fbBtn = document.getElementById('feedback-btn');
+              if (fbBtn) {
+                const FEEDBACK_URL = fbBtn.href || 'https://forms.gle/ppsBmAiLdGxstd6eA';
+                fbBtn.outerHTML = `<a id="feedback-btn" href="${FEEDBACK_URL}" target="_blank" rel="noopener" aria-label="Submit feedback" style="position:fixed;top:10px;left:12px;z-index:1000;text-decoration:none;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;width:36px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 8px rgba(255,215,0,0.7));transition:transform 0.15s ease,filter 0.15s ease;" onmouseover="this.style.transform='scale(1.18)';this.style.filter='drop-shadow(0 4px 16px rgba(255,215,0,0.95))'" onmouseout="this.style.transform='scale(1)';this.style.filter='drop-shadow(0 2px 8px rgba(255,215,0,0.7))'">🏆</a>`;
+              }
+
+              window.__flyingCatsStarted = false;
+            }, 3700);
+          }, 1400);
+        }, 1000);
+      }
+
+      // ── Level-up quips ──
+      const QUIPS = [
+        "Hey! That's my cat!",
+        "What did Bean ever do to you!",
+        "I'm telling mom!",
+        "Stop touching my cat!",
+        "Sushi! Noooo!",
+        "Now this is pod racing!",
+        "Ruh roh raggy!",
+        "Nice! Nice! NAUGHTTTTY!",
+        "Ermmmm. NOT EXACTLY",
+        "Woah! Have you done this before?",
+        "You have got to be kitten me",
+        "me-wow!",
+        "Release the butthole cut!",
+        "Bet you didn't think an archive of a local community film even had a hidden cat flinging mini game. Did you?",
+        "You telling me a shrimp fried this rice?",
+        "You're now wanted in 3 states!",
+        "You have died of dysentery!",
+        "Somebody poisoned the waterhole!",
+        "That's a rock fact!",
+        "Noooooooooo!",
+      ];
+      // Shuffle once
+      (function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}})(QUIPS);
+      let quipIdx = 0;
+
+      const quipEl = document.createElement('div');
+      Object.assign(quipEl.style, {
+        position:'fixed', bottom:'28px', left:'50%',
+        transform:'translateX(-50%) translateY(30px)',
+        zIndex:'200005', pointerEvents:'none',
+        color:'#fff',
+        fontSize:'clamp(18px,4.5vw,42px)',
+        fontWeight:'900', fontFamily:'inherit',
+        letterSpacing:'-0.01em',
+        textShadow:'0 3px 18px rgba(0,0,0,0.85)',
+        opacity:'0',
+        transition:'opacity 0.25s ease, transform 0.25s ease',
+        maxWidth:'90vw', textAlign:'center', lineHeight:'1.2',
+        whiteSpace:'normal',
+      });
+      document.body.appendChild(quipEl);
+
+      function showQuip() {
+        const msg = QUIPS[quipIdx % QUIPS.length];
+        quipIdx++;
+        quipEl.textContent = msg;
+        // Slide up + fade in
+        quipEl.style.transition = 'none';
+        quipEl.style.transform = 'translateX(-50%) translateY(30px)';
+        quipEl.style.opacity = '0';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            quipEl.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            quipEl.style.transform = 'translateX(-50%) translateY(0)';
+            quipEl.style.opacity = '1';
+          });
+        });
+      }
+      function hideQuip() {
+        quipEl.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        quipEl.style.transform = 'translateX(-50%) translateY(8px)';
+        quipEl.style.opacity = '0';
+      }
+
       function bumpScore() {
         score++;
         tallyEl.style.display = 'block';
@@ -2606,6 +2915,11 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
           restartInterval();
           levelEl.style.transform = 'translateX(calc(-50% - ' + (getLevelCfg()[0]/2 + POST_W + 10) + 'px)) scale(1.5)';
           setTimeout(updateLevelLabel, 300);
+          showQuip();
+          // Trophy milestones
+          if (level === 11) showBronzeTrophy();
+          else if (level === 16) showSilverTrophy();
+          else if (level === 21) triggerGoldTrophyFinale();
         }
       }
 
@@ -2709,6 +3023,7 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               const cy=e.touches?e.touches[0].clientY:e.clientY;
               lastPX=cx; lastPY=cy; histX=[cx]; histY=[cy]; histT=[performance.now()];
               cancelAnimationFrame(animFrame);
+              hideQuip();
             }
             function onMove(e) {
               if (!grabbed) return; e.preventDefault();
