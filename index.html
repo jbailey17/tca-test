@@ -398,6 +398,9 @@ $('stats').innerHTML = stats.map(([l,v])=>`<div class="stat"><span class="n">${v
 }
 const DEFAULT_SORT ={films: 'newest',members: 'films',teams: 'films',awards: 'default',events: 'newest',stats: 'default'};
 const state ={view: 'events',q: '',event: '',year: '',sort: DEFAULT_SORT['events']};
+// ── Hall of Fame Google Apps Script URL ──
+// Replace the string below with your deployed Apps Script web app URL.
+window.HOF_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwfiEmlGhHomaocZ5STAegjzopZ7BGee_O5Q_MWCmZjY_0HRB226v3T922tZEpHNSTFnQ/exec';
 let preSearchView = null;
 function fuzzyContains(haystack,needle){
 if (haystack.includes(needle)) return true;
@@ -772,7 +775,37 @@ function renderExperimental(){
     }
   }, 0);
 
-  const sectionHead = (emoji, title) =>
+  // ── Hall of Fame fetch ──
+  setTimeout(() => {
+    const hofList = document.getElementById('hof-list');
+    if (!hofList) return;
+    const url = window.HOF_SCRIPT_URL;
+    if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') {
+      hofList.innerHTML = '<div style="color:var(--text-faint);font-size:13px;font-style:italic;">Hall of Fame not yet configured.</div>';
+      return;
+    }
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok || !data.entries || data.entries.length === 0) {
+          hofList.innerHTML = '<div style="color:var(--text-faint);font-size:13px;font-style:italic;">No champions yet — be the first! 🐱</div>';
+          return;
+        }
+        hofList.innerHTML = data.entries.map((e, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-elev);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">
+            <span style="font-size:16px;min-width:26px;text-align:center;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏅'}</span>
+            <span style="font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.name)}</span>
+            <span style="font-size:11px;color:var(--text-faint);flex-shrink:0;">${escHtml(e.date)}</span>
+          </div>`).join('');
+      })
+      .catch(() => {
+        hofList.innerHTML = '<div style="color:var(--text-faint);font-size:13px;font-style:italic;">Couldn\'t load Hall of Fame right now.</div>';
+      });
+  }, 0);
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
     `<div style="display:flex;align-items:center;gap:8px;margin:0 0 4px;">
       <span style="font-size:18px;">${emoji}</span>
       <span style="font-size:16px;font-weight:700;color:var(--text);">${title}</span>
@@ -798,6 +831,17 @@ function renderExperimental(){
     <p style="color:var(--text-dim);font-size:14px;margin:16px 16px 6px;line-height:1.6;">Oh, you probably want more than cute pics of cats. Or maybe that's all you want. Well, here's a cool button that opens up a random Cinemadrome film on YouTube. Enjoy!</p>
     <button onclick="(function(){const vids=DATA.submissions.map(s=>s.video_id).filter(Boolean);const id=vids[Math.floor(Math.random()*vids.length)];window.open('https://www.youtube.com/watch?v='+id,'_blank');})()" style="margin:12px auto 0;display:inline-block;background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff);background-size:300% 100%;animation:rainbow-tab 2s linear infinite;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,0.4);letter-spacing:0.03em;">🎬 Open a Random Film</button>
     <p style="color:var(--text-faint);font-size:13px;font-style:italic;margin:20px 16px 0;line-height:1.5;">(And don't you dare tell anyone else about this tab…)</p>
+
+    <div style="margin:36px 0 0;text-align:left;">
+      <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px;">
+        <span style="font-size:22px;">🏆</span>
+        <span style="font-size:17px;font-weight:700;color:var(--text);">Hall of Fame</span>
+        <span style="font-size:12px;color:var(--text-faint);margin-left:4px;">Cat-Flinging Champions</span>
+      </div>
+      <div id="hof-list" style="min-height:48px;">
+        <div style="color:var(--text-faint);font-size:13px;font-style:italic;">Loading…</div>
+      </div>
+    </div>
   </div>`;
 }
 function renderStats(filtered){
@@ -2826,9 +2870,113 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               }
 
               window.__flyingCatsStarted = false;
+
+              // ── Hall of Fame name entry ──
+              showHofModal();
             }, 3700);
           }, 1400);
         }, 1000);
+      }
+
+      function showHofModal() {
+        // Remove any existing modal
+        const existing = document.getElementById('hof-modal-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'hof-modal-overlay';
+        Object.assign(overlay.style, {
+          position:'fixed', inset:'0', zIndex:'300000',
+          background:'rgba(0,0,0,0.65)', display:'flex',
+          alignItems:'center', justifyContent:'center',
+          padding:'20px', backdropFilter:'blur(4px)',
+          animation:'hofFadeIn 0.35s ease forwards',
+        });
+
+        if (!document.getElementById('hof-modal-kf')) {
+          const kf = document.createElement('style');
+          kf.id = 'hof-modal-kf';
+          kf.textContent = '@keyframes hofFadeIn{from{opacity:0}to{opacity:1}} @keyframes hofSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}';
+          document.head.appendChild(kf);
+        }
+
+        overlay.innerHTML = `
+          <div style="background:var(--bg-elev,#141821);border:1px solid var(--border,#2a3142);border-radius:16px;padding:28px 24px;max-width:380px;width:100%;text-align:center;animation:hofSlideUp 0.35s ease forwards;box-shadow:0 24px 60px rgba(0,0,0,0.7);">
+            <div style="font-size:44px;margin-bottom:8px;">🏆</div>
+            <h2 style="margin:0 0 6px;font-size:19px;font-weight:800;color:var(--text,#e6e9ef);">You beat the mini game!</h2>
+            <p style="margin:0 0 18px;font-size:13px;color:var(--text-dim,#9aa3b2);line-height:1.5;">Enter your name (or your cat's name)<br>for the Hall of Fame.</p>
+            <input id="hof-name-input" type="text" maxlength="80" placeholder="e.g. Churro the Naughty Cat"
+              style="width:100%;box-sizing:border-box;padding:10px 14px;background:var(--bg,#0b0d12);border:1px solid var(--border-strong,#3a445c);border-radius:8px;color:var(--text,#e6e9ef);font-size:14px;font:inherit;outline:none;margin-bottom:12px;"
+              autocomplete="off" autocorrect="off" spellcheck="false">
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <button id="hof-skip-btn"
+                style="flex:1;padding:10px;background:transparent;border:1px solid var(--border,#2a3142);color:var(--text-dim,#9aa3b2);border-radius:8px;font:inherit;font-size:13px;cursor:pointer;">
+                Skip
+              </button>
+              <button id="hof-submit-btn"
+                style="flex:2;padding:10px;background:linear-gradient(90deg,#f4c430,#ffb547);border:none;color:#000;border-radius:8px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.02em;">
+                Add me to the Hall of Fame!
+              </button>
+            </div>
+            <div id="hof-status" style="margin-top:10px;font-size:12px;color:var(--text-faint,#6b7384);min-height:16px;"></div>
+          </div>`;
+
+        document.body.appendChild(overlay);
+
+        const input    = overlay.querySelector('#hof-name-input');
+        const submitBtn = overlay.querySelector('#hof-submit-btn');
+        const skipBtn  = overlay.querySelector('#hof-skip-btn');
+        const status   = overlay.querySelector('#hof-status');
+
+        function closeModal() {
+          overlay.style.transition = 'opacity 0.25s ease';
+          overlay.style.opacity = '0';
+          setTimeout(() => overlay.remove(), 260);
+        }
+
+        skipBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+        async function submitName() {
+          const name = input.value.trim();
+          if (!name) { input.focus(); return; }
+          const url = window.HOF_SCRIPT_URL;
+          if (!url || url === 'YOUR_APPS_SCRIPT_URL_HERE') {
+            status.style.color = 'var(--text-faint,#6b7384)';
+            status.textContent = '(Hall of Fame not configured yet — but we salute you!)';
+            setTimeout(closeModal, 2200);
+            return;
+          }
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Saving…';
+          status.textContent = '';
+          try {
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({ name }),
+            });
+            const data = await resp.json();
+            if (data.ok) {
+              submitBtn.style.background = 'var(--green,#6ee7b7)';
+              submitBtn.textContent = '✓ Added!';
+              status.textContent = 'You\'re in the Hall of Fame! 🎉';
+              status.style.color = 'var(--green,#6ee7b7)';
+              setTimeout(closeModal, 1800);
+            } else {
+              throw new Error(data.error || 'Unknown error');
+            }
+          } catch(err) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add me to the Hall of Fame!';
+            status.style.color = '#ff6b6b';
+            status.textContent = 'Couldn\'t save right now. Try again!';
+          }
+        }
+
+        submitBtn.addEventListener('click', submitName);
+        input.addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
+        setTimeout(() => input.focus(), 400);
       }
 
       // ── Level-up quips ──
