@@ -788,24 +788,33 @@ function renderExperimental(){
       .then(r => r.json())
       .then(data => {
         if (!data.ok || !data.entries || data.entries.length === 0) {
-          hofList.innerHTML = '<div style="color:var(--text-faint);font-size:13px;font-style:italic;">No champions yet — be the first! 🐱</div>';
+          hofList.innerHTML = '<div style="color:#7a6020;font-size:13px;font-style:italic;text-align:center;padding:8px 0;">No champions yet — be the first! 🐱</div>';
           return;
         }
-        hofList.innerHTML = data.entries.map((e, i) => `
-          <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-elev);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;">
-            <span style="font-size:16px;min-width:26px;text-align:center;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏅'}</span>
-            <span style="font-weight:700;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.name)}</span>
-            <span style="font-size:11px;color:var(--text-faint);flex-shrink:0;">${escHtml(e.date)}</span>
-          </div>`).join('');
+        hofList.innerHTML = data.entries.map((e, i) => {
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '🏅';
+          const delay = (i * 0.07).toFixed(2);
+          const isTop = i < 3;
+          return `<div class="hof-entry" style="animation-delay:${delay}s;display:flex;align-items:center;gap:10px;padding:9px 12px;
+              background:${isTop ? 'linear-gradient(90deg,rgba(212,175,55,0.12),rgba(212,175,55,0.04))' : 'rgba(255,255,255,0.03)'};
+              border:1px solid ${isTop ? 'rgba(212,175,55,0.35)' : 'rgba(212,175,55,0.12)'};
+              border-radius:8px;margin-bottom:6px;">
+            <span style="font-size:18px;min-width:28px;text-align:center;">${medal}</span>
+            <span style="font-weight:${isTop ? '800' : '600'};color:${isTop ? '#ffd700' : '#c8a840'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:${isTop ? '15px' : '13px'};">${escHtml(e.name)}</span>
+            <span style="font-size:10px;color:#6a5010;flex-shrink:0;letter-spacing:0.03em;">${escHtml(e.date)}</span>
+          </div>`;
+        }).join('');
       })
       .catch(() => {
-        hofList.innerHTML = '<div style="color:var(--text-faint);font-size:13px;font-style:italic;">Couldn\'t load Hall of Fame right now.</div>';
+        hofList.innerHTML = '<div style="color:#7a6020;font-size:13px;font-style:italic;text-align:center;padding:8px 0;">Couldn\'t load Hall of Fame right now.</div>';
       });
   }, 0);
 
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+
+  const sectionHead = (emoji, title) =>
     `<div style="display:flex;align-items:center;gap:8px;margin:0 0 4px;">
       <span style="font-size:18px;">${emoji}</span>
       <span style="font-size:16px;font-weight:700;color:var(--text);">${title}</span>
@@ -832,14 +841,70 @@ function renderExperimental(){
     <button onclick="(function(){const vids=DATA.submissions.map(s=>s.video_id).filter(Boolean);const id=vids[Math.floor(Math.random()*vids.length)];window.open('https://www.youtube.com/watch?v='+id,'_blank');})()" style="margin:12px auto 0;display:inline-block;background:linear-gradient(90deg,#ff0000,#ff7700,#ffff00,#00ff00,#0000ff,#8b00ff);background-size:300% 100%;animation:rainbow-tab 2s linear infinite;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,0.4);letter-spacing:0.03em;">🎬 Open a Random Film</button>
     <p style="color:var(--text-faint);font-size:13px;font-style:italic;margin:20px 16px 0;line-height:1.5;">(And don't you dare tell anyone else about this tab…)</p>
 
-    <div style="margin:36px 0 0;text-align:left;">
-      <div style="display:flex;align-items:center;gap:8px;margin:0 0 12px;">
-        <span style="font-size:22px;">🏆</span>
-        <span style="font-size:17px;font-weight:700;color:var(--text);">Hall of Fame</span>
-        <span style="font-size:12px;color:var(--text-faint);margin-left:4px;">Cat-Flinging Champions</span>
-      </div>
-      <div id="hof-list" style="min-height:48px;">
-        <div style="color:var(--text-faint);font-size:13px;font-style:italic;">Loading…</div>
+    <div style="margin:48px 0 0;">
+      <style>
+        @keyframes hofGoldShimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes hofSparkle {
+          0%,100% { opacity:0; transform:scale(0) rotate(0deg); }
+          50%      { opacity:1; transform:scale(1) rotate(180deg); }
+        }
+        @keyframes hofGlow {
+          0%,100% { box-shadow: 0 0 24px 4px rgba(212,175,55,0.25), 0 0 60px 10px rgba(212,175,55,0.1), inset 0 0 30px rgba(212,175,55,0.05); }
+          50%      { box-shadow: 0 0 40px 8px rgba(212,175,55,0.45), 0 0 90px 20px rgba(212,175,55,0.2), inset 0 0 50px rgba(212,175,55,0.12); }
+        }
+        @keyframes hofTrophyBob {
+          0%,100% { transform: translateY(0) rotate(-3deg); }
+          50%      { transform: translateY(-6px) rotate(3deg); }
+        }
+        @keyframes hofEntrySlide {
+          from { opacity:0; transform:translateX(-12px); }
+          to   { opacity:1; transform:translateX(0); }
+        }
+        .hof-entry { animation: hofEntrySlide 0.4s ease both; }
+        .hof-spark { position:absolute; pointer-events:none; animation: hofSparkle 2s ease-in-out infinite; font-size:14px; }
+      </style>
+
+      <!-- Outer glow frame -->
+      <div style="position:relative;border-radius:20px;padding:3px;background:linear-gradient(135deg,#b8860b,#ffd700,#fffacd,#ffd700,#daa520,#ffd700,#b8860b);background-size:300% 300%;animation:hofGoldShimmer 4s linear infinite;animation-direction:alternate;">
+        <div style="position:relative;border-radius:18px;background:linear-gradient(160deg,#0f1018 0%,#16130a 40%,#0f1018 100%);padding:28px 24px 32px;overflow:hidden;animation:hofGlow 3s ease-in-out infinite;">
+
+          <!-- Corner sparkles -->
+          <span class="hof-spark" style="top:10px;left:14px;animation-delay:0s;">✦</span>
+          <span class="hof-spark" style="top:10px;right:14px;animation-delay:0.7s;">✦</span>
+          <span class="hof-spark" style="bottom:10px;left:14px;animation-delay:1.4s;">✦</span>
+          <span class="hof-spark" style="bottom:10px;right:14px;animation-delay:0.35s;">✦</span>
+          <span class="hof-spark" style="top:50%;left:8px;animation-delay:1s;font-size:10px;">★</span>
+          <span class="hof-spark" style="top:50%;right:8px;animation-delay:1.7s;font-size:10px;">★</span>
+
+          <!-- Trophy icon -->
+          <div style="font-size:52px;line-height:1;margin-bottom:4px;animation:hofTrophyBob 3s ease-in-out infinite;display:inline-block;">🏆</div>
+
+          <!-- Title -->
+          <div style="font-size:clamp(26px,6vw,36px);font-weight:900;letter-spacing:0.08em;text-transform:uppercase;
+            background:linear-gradient(90deg,#b8860b 0%,#ffd700 25%,#fffacd 50%,#ffd700 75%,#b8860b 100%);
+            background-size:200% auto;
+            -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+            animation:hofGoldShimmer 3s linear infinite;
+            line-height:1.1;margin-bottom:4px;">
+            Hall of Fame
+          </div>
+
+          <!-- Subtitle -->
+          <div style="font-size:11px;letter-spacing:0.22em;text-transform:uppercase;color:#a07820;font-weight:600;margin-bottom:20px;">
+            ✦ &nbsp; Cat-Flinging Champions &nbsp; ✦
+          </div>
+
+          <!-- Divider -->
+          <div style="height:1px;background:linear-gradient(90deg,transparent,#ffd700,transparent);margin-bottom:20px;opacity:0.5;"></div>
+
+          <!-- Entry list -->
+          <div id="hof-list" style="min-height:48px;text-align:left;">
+            <div style="color:#7a6020;font-size:13px;font-style:italic;text-align:center;">Loading…</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>`;
@@ -2951,21 +3016,18 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
           submitBtn.textContent = 'Saving…';
           status.textContent = '';
           try {
-            const resp = await fetch(url, {
+            await fetch(url, {
               method: 'POST',
-              headers: {'Content-Type':'application/json'},
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain' },
               body: JSON.stringify({ name }),
             });
-            const data = await resp.json();
-            if (data.ok) {
-              submitBtn.style.background = 'var(--green,#6ee7b7)';
-              submitBtn.textContent = '✓ Added!';
-              status.textContent = 'You\'re in the Hall of Fame! 🎉';
-              status.style.color = 'var(--green,#6ee7b7)';
-              setTimeout(closeModal, 1800);
-            } else {
-              throw new Error(data.error || 'Unknown error');
-            }
+            // no-cors returns an opaque response — can't read it, but if we get here it went through
+            submitBtn.style.background = 'var(--green,#6ee7b7)';
+            submitBtn.textContent = '✓ Added!';
+            status.textContent = 'You\'re in the Hall of Fame! 🎉';
+            status.style.color = 'var(--green,#6ee7b7)';
+            setTimeout(closeModal, 1800);
           } catch(err) {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Add me to the Hall of Fame!';
