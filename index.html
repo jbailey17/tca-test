@@ -2408,47 +2408,70 @@ if (e.target.closest('#yt-download-btn')) refreshAndDownload();
 $('close-drawer').addEventListener('click',closeDrawer);
 $('scrim').addEventListener('click',closeDrawer);
 document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
-// Version button: hold 3s = bar appears, hold 2s more = Experimental tab unlocks
+// Version button: hold 2s = glow + rainbow sparks, hold 4s = Experimental tab unlocks
 (function(){
   const btn = document.getElementById('version-btn');
-  let phase1Timer = null; // fires at 3s — shows progress bar
-  let phase2Timer = null; // fires at 5s — unlocks tab
+  let phase1Timer = null; // fires at 2s — glow + sparks
+  let phase2Timer = null; // fires at 4s — unlocks tab
   let holdFired = false;
-  let progressEl = null;
+  let glowActive = false;
+  let sparkInterval = null;
 
   function isMobile(){ return window.matchMedia('(hover:none) and (pointer:coarse)').matches; }
 
-  function showProgressBar(){
-    // Build a fixed-position bar that overlays the button from the outside — no DOM children added to btn
-    const rect = btn.getBoundingClientRect();
-    progressEl = document.createElement('div');
-    progressEl.style.cssText = [
-      'position:fixed',
-      'top:' + (rect.top + window.scrollY) + 'px',
-      'left:' + rect.left + 'px',
-      'width:' + rect.width + 'px',
-      'height:' + rect.height + 'px',
-      'border-radius:10px',
-      'overflow:hidden',
-      'pointer-events:none',
-      'z-index:9999'
-    ].join(';');
-    const fill = document.createElement('div');
-    fill.style.cssText = 'position:absolute;inset:0;width:0%;background:rgba(110,231,183,0.30);transition:width 2s linear;';
-    progressEl.appendChild(fill);
-    document.body.appendChild(progressEl);
-    // Kick off the 2s fill animation
-    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ fill.style.width = '100%'; }); });
+  // Inject keyframes for btn glow pulse if not already present
+  function ensureGlowStyle(){
+    if (!document.getElementById('version-btn-glow-kf')) {
+      const s = document.createElement('style');
+      s.id = 'version-btn-glow-kf';
+      s.textContent = '@keyframes vbtnRainbowGlow{0%{box-shadow:0 0 8px 2px #ff0000,0 0 16px 4px #ff000055;border-color:#ff0000;color:#ff6666}14%{box-shadow:0 0 8px 2px #ff7700,0 0 16px 4px #ff770055;border-color:#ff7700;color:#ffaa44}28%{box-shadow:0 0 8px 2px #ffff00,0 0 16px 4px #ffff0055;border-color:#ffff00;color:#ffff66}43%{box-shadow:0 0 8px 2px #00ff00,0 0 16px 4px #00ff0055;border-color:#00ff00;color:#66ff66}57%{box-shadow:0 0 8px 2px #0088ff,0 0 16px 4px #0088ff55;border-color:#0088ff;color:#66aaff}71%{box-shadow:0 0 8px 2px #8b00ff,0 0 16px 4px #8b00ff55;border-color:#8b00ff;color:#cc66ff}85%{box-shadow:0 0 8px 2px #ff0080,0 0 16px 4px #ff008055;border-color:#ff0080;color:#ff66bb}100%{box-shadow:0 0 8px 2px #ff0000,0 0 16px 4px #ff000055;border-color:#ff0000;color:#ff6666}}';
+      document.head.appendChild(s);
+    }
   }
 
-  function cancelProgress(){
-    if (progressEl && progressEl.parentNode){ progressEl.parentNode.removeChild(progressEl); progressEl = null; }
+  function startGlowAndSparks(){
+    ensureGlowStyle();
+    glowActive = true;
+    btn.style.animation = 'vbtnRainbowGlow 0.8s linear infinite';
+    btn.style.transition = 'none';
+    // Spawn sparks periodically
+    sparkInterval = setInterval(function(){
+      if (!glowActive) return;
+      const rect = btn.getBoundingClientRect();
+      const colors = ['#ff0000','#ff7700','#ffff00','#00ff00','#0088ff','#8b00ff','#ff0080'];
+      for (let i = 0; i < 3; i++) {
+        const spark = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const angle = Math.random() * 360;
+        const dist = 30 + Math.random() * 30;
+        const rad = angle * Math.PI / 180;
+        const sx = rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width;
+        const sy = rect.top + rect.height / 2 + (Math.random() - 0.5) * rect.height;
+        spark.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;width:5px;height:5px;border-radius:50%;background:' + color + ';box-shadow:0 0 4px 2px ' + color + ';left:' + sx + 'px;top:' + sy + 'px;transition:transform 0.6s ease-out,opacity 0.6s ease-out;transform:translate(0,0) scale(1);opacity:1;';
+        document.body.appendChild(spark);
+        requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+          spark.style.transform = 'translate(' + (Math.cos(rad)*dist) + 'px,' + (Math.sin(rad)*dist) + 'px) scale(0)';
+          spark.style.opacity = '0';
+        });});
+        setTimeout(()=>{ spark.remove(); }, 700);
+      }
+    }, 120);
+  }
+
+  function stopGlowAndSparks(){
+    glowActive = false;
+    if (sparkInterval){ clearInterval(sparkInterval); sparkInterval = null; }
+    btn.style.animation = '';
+    btn.style.boxShadow = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.style.transition = '';
   }
 
   function cancelAll(){
     if (phase1Timer){ clearTimeout(phase1Timer); phase1Timer = null; }
     if (phase2Timer){ clearTimeout(phase2Timer); phase2Timer = null; }
-    cancelProgress();
+    stopGlowAndSparks();
     holdFired = false;
   }
 
@@ -2464,18 +2487,18 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
   function startHold(e){
     if (e.type === 'touchstart' && !isMobile()) return;
     holdFired = false;
-    // Phase 1: after 3s, show the loading bar
+    // Phase 1: after 2s, start glowing and shooting sparks
     phase1Timer = setTimeout(()=>{
       phase1Timer = null;
-      showProgressBar();
-      // Phase 2: after 2s more, unlock
+      startGlowAndSparks();
+      // Phase 2: after 2s more (4s total), unlock
       phase2Timer = setTimeout(()=>{
         phase2Timer = null;
         holdFired = true;
-        cancelProgress();
+        stopGlowAndSparks();
         unlockExperimental();
       }, 2000);
-    }, 3000);
+    }, 2000);
   }
 
   btn.addEventListener('touchstart', startHold, {passive:true});
@@ -2887,15 +2910,9 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
 
               // Switch to Events tab
               if (window.__VIEWS && window.__VIEWS.includes('experimental')) {
-                window.__VIEWS = window.__VIEWS.filter(v => v !== 'experimental');
+                // Keep experimental in VIEWS so swipe still works
               }
-              // Remove TOPSECRET tab
-              const expTab = document.querySelector('.tab[data-view="experimental"]');
-              if (expTab) {
-                expTab.style.transition = 'opacity 0.5s ease';
-                expTab.style.opacity = '0';
-                setTimeout(() => expTab.remove(), 600);
-              }
+              // Keep TOPSECRET tab visible (do not remove it)
 
               // Revert header collage from cats back to movie posters
               const collageBg = document.getElementById('header-collage-bg');
@@ -3164,6 +3181,77 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
                (cx + r > g.rpLeft && cx - r < g.rpRight);
       }
 
+      function triggerMythicCatSuck() {
+        if (window.__mythicSuckActive) return;
+        window.__mythicSuckActive = true;
+        // DO NOT stop spawning — new cats should immediately get sucked in too
+
+        if (!document.getElementById('mythic-suck-kf')) {
+          var kfEl = document.createElement('style');
+          kfEl.id = 'mythic-suck-kf';
+          kfEl.textContent =
+            '@keyframes mythicVortexSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}'
+            + '@keyframes mythicSuckText{0%{opacity:0;transform:translate(-50%,-50%) scale(0.2) rotate(-6deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.18) rotate(3deg)}35%{transform:translate(-50%,-50%) scale(0.95) rotate(-1deg)}55%{opacity:1;transform:translate(-50%,-50%) scale(1.04)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1) rotate(2deg)}}';
+          document.head.appendChild(kfEl);
+        }
+
+        var gr = goalEl.getBoundingClientRect();
+        var gCX = gr.left + gr.width/2;
+        var gCY = gr.top  + gr.height/2;
+
+        var rings = [];
+        [[60,4,0.8],[100,3,1.1],[150,2,1.5]].forEach(function(cfg, i) {
+          var size=cfg[0], bw=cfg[1], spd=cfg[2];
+          var ring = document.createElement('div');
+          Object.assign(ring.style, {
+            position:'fixed', pointerEvents:'none', zIndex:'100006',
+            left:gCX+'px', top:gCY+'px',
+            width:size+'px', height:size+'px', borderRadius:'50%',
+            border:bw+'px solid rgba(0,255,100,'+(0.9-i*0.2)+')',
+            boxShadow:'0 0 18px 6px rgba(0,255,80,0.5),inset 0 0 10px rgba(0,200,60,0.3)',
+            marginLeft:(-size/2)+'px', marginTop:(-size/2)+'px',
+            animation:'mythicVortexSpin '+spd+'s linear infinite',
+            animationDirection: i%2===0 ? 'normal' : 'reverse',
+          });
+          document.body.appendChild(ring);
+          rings.push(ring);
+        });
+
+        var glowPhase = true;
+        goalEl.style.filter = 'drop-shadow(0 0 40px #00ff64) drop-shadow(0 0 90px #00cc44)';
+        var glowInterval = setInterval(function(){
+          glowPhase = !glowPhase;
+          goalEl.style.filter = glowPhase
+            ? 'drop-shadow(0 0 50px #00ff64) drop-shadow(0 0 120px #00cc44)'
+            : 'drop-shadow(0 0 20px #00ff64) drop-shadow(0 0 60px #00aa33)';
+        }, 350);
+
+        var suckText = document.createElement('div');
+        Object.assign(suckText.style, {
+          position:'fixed', pointerEvents:'none', zIndex:'100011',
+          left:'50%', top:'42%',
+          fontFamily:'inherit', fontWeight:'900',
+          fontSize:'clamp(28px,7.5vw,72px)',
+          letterSpacing:'0.04em', whiteSpace:'nowrap', textAlign:'center',
+          background:'linear-gradient(90deg,#00ff64,#c8ffd6,#00cc44,#00ff64)',
+          backgroundSize:'200% auto',
+          WebkitBackgroundClip:'text', backgroundClip:'text',
+          WebkitTextFillColor:'transparent',
+          filter:'drop-shadow(0 0 18px rgba(0,255,100,0.95)) drop-shadow(0 2px 6px rgba(0,0,0,0.9))',
+          animation:'mythicSuckText 4.5s ease forwards',
+        });
+        suckText.textContent = 'MYTHIC CAT SUCK!!!';
+        document.body.appendChild(suckText);
+
+        setTimeout(function(){
+          rings.forEach(function(r){ r.remove(); });
+          suckText.remove();
+          clearInterval(glowInterval);
+          goalEl.style.filter = 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))';
+          window.__mythicSuckActive = false;
+        }, 5000);
+      }
+
       function launchCat() {
         const [,, catsPerLaunch, speedMult] = getLevelCfg();
         for (let ci = 0; ci < catsPerLaunch; ci++) {
@@ -3171,6 +3259,7 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
           setTimeout(function() {
             (function() {
             const isGolden = Math.random() < 1/30;
+            const isGreen  = !isGolden && Math.random() < 1/100;
 
             // Inject golden/epic keyframes once, only when needed
             if (isGolden && !document.getElementById('golden-cat-kf')) {
@@ -3182,10 +3271,17 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               document.head.appendChild(kf);
             }
 
+            if (isGreen && !document.getElementById('green-cat-kf')) {
+              var kfg = document.createElement('style');
+              kfg.id = 'green-cat-kf';
+              kfg.textContent = '@keyframes greenCatGlow{0%,100%{box-shadow:0 0 16px 4px rgba(0,255,100,0.7),0 0 40px 10px rgba(0,200,80,0.4)}50%{box-shadow:0 0 28px 8px rgba(0,255,100,1),0 0 70px 20px rgba(0,180,60,0.7)}}';
+              document.head.appendChild(kfg);
+            }
+
             const img = document.createElement('img');
             img.src = CAT_URLS[catIndex % CAT_URLS.length];
             catIndex++;
-            const size = (90 + Math.random() * 70) * (isGolden ? 1.15 : 1);
+            const size = (90 + Math.random() * 70) * (isGolden ? 1.15 : isGreen ? 1.1 : 1);
             const r = size / 2;
             const vw = window.innerWidth; const vh = window.innerHeight;
             const edge = Math.floor(Math.random() * 4);
@@ -3205,7 +3301,9 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
             Object.assign(img.style,{
               position:'fixed', width:size+'px', height:size+'px',
               objectFit:'cover', borderRadius:'16px',
-              boxShadow: isGolden ? '0 0 20px 6px rgba(255,215,0,0.8),0 0 50px 14px rgba(255,165,0,0.5)' : '0 8px 32px rgba(0,0,0,0.5)',
+              boxShadow: isGolden ? '0 0 20px 6px rgba(255,215,0,0.8),0 0 50px 14px rgba(255,165,0,0.5)'
+                       : isGreen  ? '0 0 20px 6px rgba(0,255,100,0.8),0 0 50px 14px rgba(0,200,80,0.5)'
+                       : '0 8px 32px rgba(0,0,0,0.5)',
               left:x+'px', top:y+'px', zIndex:'99999',
               pointerEvents:'auto', cursor:'grab',
               userSelect:'none', touchAction:'none', opacity:'0.92',
@@ -3214,7 +3312,11 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
             if (isGolden) {
               img.style.filter = 'sepia(0.7) saturate(4) hue-rotate(5deg) brightness(1.35)';
               img.style.animation = 'goldenCatGlow 1.2s ease-in-out infinite';
+            } else if (isGreen) {
+              img.style.filter = 'hue-rotate(100deg) saturate(4) brightness(1.25)';
+              img.style.animation = 'greenCatGlow 1s ease-in-out infinite';
             }
+            img.classList.add('flying-cat');
             document.body.appendChild(img);
 
             function setPos() {
@@ -3222,6 +3324,7 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               img.style.transform='translate(-50%,-50%) rotate('+rot+'deg)';
             }
             function flashGoalLocal() {
+              if (isGreen) { triggerMythicCatSuck(); return; }
               if (!isGolden) {
                 goalEl.style.filter='drop-shadow(0 0 18px #ffdd00) drop-shadow(0 4px 12px rgba(0,0,0,0.5))';
                 setTimeout(()=>{ goalEl.style.filter='drop-shadow(0 4px 12px rgba(0,0,0,0.5))'; },400);
@@ -3303,6 +3406,33 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               if (grabbed) return;
               if (lastT===null) lastT=ts;
               const dt=Math.min(ts-lastT,64); lastT=ts;
+
+              // Mythic suck: strong gravity toward the goal centre
+              if (window.__mythicSuckActive) {
+                const sgr = goalEl.getBoundingClientRect();
+                const sgCX = sgr.left + sgr.width/2;
+                const sgCY = sgr.top  + sgr.height/2;
+                const sdx = sgCX - x, sdy = sgCY - y;
+                const sdist = Math.sqrt(sdx*sdx + sdy*sdy) || 1;
+                // Constant-direction acceleration — strong enough to pull across screen in ~1s
+                vx += (sdx/sdist) * 0.007 * dt;
+                vy += (sdy/sdist) * 0.007 * dt;
+                // Cap speed so it stays dramatic but not invisible-fast
+                const sspd = Math.sqrt(vx*vx + vy*vy);
+                if (sspd > 2.8) { vx = (vx/sspd)*2.8; vy = (vy/sspd)*2.8; }
+                // Spin faster as cats streak in
+                rotSpeed = (rotSpeed >= 0 ? 1 : -1) * Math.min(sspd * 0.35, 2.5);
+                // Score when cat centre reaches goal area (no direction requirement)
+                if (!scored && sdist < r + 30) {
+                  scored=true;
+                  bumpScore(isGolden ? 5 : 1);
+                  // Quick green flash per goal — don't run full flashGoalLocal during suck
+                  goalEl.style.filter='drop-shadow(0 0 55px #00ff64) drop-shadow(0 0 130px #00cc44)';
+                  setTimeout(function(){ if (window.__mythicSuckActive) goalEl.style.filter='drop-shadow(0 0 40px #00ff64) drop-shadow(0 0 90px #00cc44)'; }, 180);
+                  img.remove(); return;
+                }
+              }
+
               x+=vx*dt; y+=vy*dt; rot+=rotSpeed*dt;
               setPos();
               if (!scored && vy<0 && checkGoal(x,y,r)) {
@@ -3322,7 +3452,9 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
             function onDown(e) {
               e.preventDefault(); e.stopPropagation();
               grabbed=true; img.style.cursor='grabbing';
-              img.style.boxShadow= isGolden ? '0 0 32px 10px rgba(255,215,0,1),0 0 80px 24px rgba(255,165,0,0.8)' : '0 16px 48px rgba(0,0,0,0.7)';
+              img.style.boxShadow= isGolden ? '0 0 32px 10px rgba(255,215,0,1),0 0 80px 24px rgba(255,165,0,0.8)'
+                                 : isGreen  ? '0 0 32px 10px rgba(0,255,100,1),0 0 80px 24px rgba(0,200,80,0.8)'
+                                 : '0 16px 48px rgba(0,0,0,0.7)';
               img.style.zIndex='100002';
               const cx=e.touches?e.touches[0].clientX:e.clientX;
               const cy=e.touches?e.touches[0].clientY:e.clientY;
@@ -3343,7 +3475,9 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
             function onUp(e) {
               if (!grabbed) return; grabbed=false;
               img.style.cursor='grab';
-              img.style.boxShadow= isGolden ? '0 0 20px 6px rgba(255,215,0,0.8),0 0 50px 14px rgba(255,165,0,0.5)' : '0 8px 32px rgba(0,0,0,0.5)';
+              img.style.boxShadow= isGolden ? '0 0 20px 6px rgba(255,215,0,0.8),0 0 50px 14px rgba(255,165,0,0.5)'
+                                 : isGreen  ? '0 0 20px 6px rgba(0,255,100,0.8),0 0 50px 14px rgba(0,200,80,0.5)'
+                                 : '0 8px 32px rgba(0,0,0,0.5)';
               img.style.zIndex='99999';
               const now=performance.now();
               if (histT.length>=2) { const dt2=now-histT[0]; if(dt2>0){vx=(histX[histX.length-1]-histX[0])/dt2; vy=(histY[histY.length-1]-histY[0])/dt2;} }
