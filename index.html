@@ -868,7 +868,7 @@ function renderExperimental(){
       </style>
 
       <!-- Outer glow frame -->
-      <div style="position:relative;border-radius:20px;padding:3px;background:linear-gradient(135deg,#b8860b,#ffd700,#fffacd,#ffd700,#daa520,#ffd700,#b8860b);background-size:300% 300%;animation:hofGoldShimmer 4s linear infinite;animation-direction:alternate;">
+      <div id="hof-section" style="position:relative;border-radius:20px;padding:3px;background:linear-gradient(135deg,#b8860b,#ffd700,#fffacd,#ffd700,#daa520,#ffd700,#b8860b);background-size:300% 300%;animation:hofGoldShimmer 4s linear infinite;animation-direction:alternate;">
         <div style="position:relative;border-radius:18px;background:linear-gradient(160deg,#0f1018 0%,#16130a 40%,#0f1018 100%);padding:28px 24px 32px;overflow:hidden;animation:hofGlow 3s ease-in-out infinite;">
 
           <!-- Corner sparkles -->
@@ -2974,7 +2974,7 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
               const fbBtn = document.getElementById('feedback-btn');
               if (fbBtn) {
                 const FEEDBACK_URL = fbBtn.href || 'https://forms.gle/ppsBmAiLdGxstd6eA';
-                fbBtn.outerHTML = `<a id="feedback-btn" href="${FEEDBACK_URL}" target="_blank" rel="noopener" aria-label="Submit feedback" style="position:fixed;top:10px;left:12px;z-index:1000;text-decoration:none;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;width:36px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 8px rgba(255,215,0,0.7));transition:transform 0.15s ease,filter 0.15s ease;" onmouseover="this.style.transform='scale(1.18)';this.style.filter='drop-shadow(0 4px 16px rgba(255,215,0,0.95))'" onmouseout="this.style.transform='scale(1)';this.style.filter='drop-shadow(0 2px 8px rgba(255,215,0,0.7))'">🏆</a>`;
+                fbBtn.outerHTML = `<button id="feedback-btn" aria-label="Go to Hall of Fame" style="position:fixed;top:10px;left:12px;z-index:1000;background:none;border:none;padding:0;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;width:36px;height:36px;cursor:pointer;filter:drop-shadow(0 2px 8px rgba(255,215,0,0.7));transition:transform 0.15s ease,filter 0.15s ease;" onmouseover="this.style.transform='scale(1.18)';this.style.filter='drop-shadow(0 4px 16px rgba(255,215,0,0.95))'" onmouseout="this.style.transform='scale(1)';this.style.filter='drop-shadow(0 2px 8px rgba(255,215,0,0.7))'" onclick="preSearchView=null;state.view='experimental';state.sort=DEFAULT_SORT['experimental']||'default';$('sort').value=state.sort;scrollToTabs();render();setTimeout(function(){var hof=document.getElementById('hof-section');if(hof)hof.scrollIntoView({behavior:'smooth',block:'start'});},120);">🏆</button>`;
               }
 
               window.__flyingCatsStarted = false;
