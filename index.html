@@ -1681,7 +1681,7 @@ Watch Playlist on YouTube
 </a>` : ''}
 <div style="color:var(--text-dim);margin-top:4px">${yrLine}${aw?` · 🏆 ${aw} award${aw>1?'s':''}`:''}</div>
 ${kind==='team' ? (() => {
-  const teamVideoIds = [...subs].filter(s => s.video_id).sort((a,b) => a.year - b.year).map(s => s.video_id);
+  const teamVideoIds = [...subs].filter(s => s.video_id).sort((a,b) => subSortKey(a) - subSortKey(b)).map(s => s.video_id);
   if (teamVideoIds.length === 0) return '';
   const playlistUrl = 'https://www.youtube.com/watch_videos?video_ids=' + teamVideoIds.join(',');
   return `<a class="youtube-button" href="${playlistUrl}" target="_blank" rel="noopener" style="background:#1a1a2e;border:1px solid rgba(255,181,71,0.4);color:var(--accent);margin-top:8px">${esc(key)} YouTube Playlist</a>`;
