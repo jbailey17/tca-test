@@ -2438,24 +2438,28 @@ document.addEventListener('keydown',e=>{if (e.key==='Escape') closeDrawer();});
     sparkInterval = setInterval(function(){
       if (!glowActive) return;
       const rect = btn.getBoundingClientRect();
-      const colors = ['#ff0000','#ff7700','#ffff00','#00ff00','#0088ff','#8b00ff','#ff0080'];
-      for (let i = 0; i < 3; i++) {
+      const colors = ['#ff0000','#ff7700','#ffff00','#00ff00','#0088ff','#8b00ff','#ff0080','#ffffff'];
+      const btnCx = rect.left + rect.width / 2;
+      const btnCy = rect.top + rect.height / 2;
+      for (let i = 0; i < 6; i++) {
         const spark = document.createElement('div');
         const color = colors[Math.floor(Math.random() * colors.length)];
         const angle = Math.random() * 360;
-        const dist = 30 + Math.random() * 30;
+        const dist = 60 + Math.random() * 80;
         const rad = angle * Math.PI / 180;
-        const sx = rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width;
-        const sy = rect.top + rect.height / 2 + (Math.random() - 0.5) * rect.height;
-        spark.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;width:5px;height:5px;border-radius:50%;background:' + color + ';box-shadow:0 0 4px 2px ' + color + ';left:' + sx + 'px;top:' + sy + 'px;transition:transform 0.6s ease-out,opacity 0.6s ease-out;transform:translate(0,0) scale(1);opacity:1;';
+        const edgeAngle = Math.random() * Math.PI * 2;
+        const sx = btnCx + Math.cos(edgeAngle) * (rect.width / 2) * (0.5 + Math.random() * 0.8);
+        const sy = btnCy + Math.sin(edgeAngle) * (rect.height / 2) * (0.5 + Math.random() * 0.8);
+        const size = 8 + Math.floor(Math.random() * 10);
+        spark.style.cssText = 'position:fixed;pointer-events:none;z-index:9999;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';box-shadow:0 0 ' + (size*2) + 'px ' + size + 'px ' + color + ';left:' + sx + 'px;top:' + sy + 'px;transition:transform 0.75s ease-out,opacity 0.75s ease-out;transform:translate(0,0) scale(1);opacity:1;';
         document.body.appendChild(spark);
         requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
           spark.style.transform = 'translate(' + (Math.cos(rad)*dist) + 'px,' + (Math.sin(rad)*dist) + 'px) scale(0)';
           spark.style.opacity = '0';
         });});
-        setTimeout(()=>{ spark.remove(); }, 700);
+        setTimeout(()=>{ spark.remove(); }, 850);
       }
-    }, 120);
+    }, 100);
   }
 
   function stopGlowAndSparks(){
