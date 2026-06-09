@@ -1503,6 +1503,7 @@ if (_sgo && _sgt) {
   let _sgTx=0, _sgTy=0, _sgDragging=false, _sgLocked=false;
   _sgo.addEventListener('touchstart', e=>{
     if (window.innerWidth > 600) return;
+    if (e.target.closest('.stat-carousel')) { _sgDragging = false; return; }
     _sgTx = e.touches[0].clientX;
     _sgTy = e.touches[0].clientY;
     _sgDragging = true; _sgLocked = false;
