@@ -1429,7 +1429,10 @@ if (window.innerWidth <= 600) {
     if (group.dataset.carouselBuilt) return;
     group.dataset.carouselBuilt = '1';
     // Collect all direct .panel children (and stat-section wrappers containing panels)
+    // Exclude elements that are initially hidden — they are conditionally shown later and
+    // would create unreachable phantom carousel slots.
     var panels = Array.from(group.children).filter(function(el) {
+      if (el.style.display === 'none') return false;
       return el.classList.contains('panel') || el.classList.contains('stat-section') || (el.tagName==='DIV' && !el.style.gridColumn);
     });
     if (panels.length < 2) return;
@@ -1453,6 +1456,7 @@ if (window.innerWidth <= 600) {
     var idx = 0, sx = 0, sy = 0, st = 0, locked = null, dragging = false;
     var count = panels.length;
     function goTo(n, animate) {
+      count = track.children.length; // re-read in case panels were dynamically inserted
       n = Math.max(0, Math.min(count-1, n));
       idx = n;
       if (!animate) { track.classList.add('no-transition'); }
@@ -1460,6 +1464,7 @@ if (window.innerWidth <= 600) {
       if (!animate) { track.offsetHeight; track.classList.remove('no-transition'); }
       dotsEl.querySelectorAll('.dot').forEach(function(d,i) { d.classList.toggle('active', i===idx); });
     }
+    outer._carouselGoTo = goTo; // expose for dynamic panel insertion
     outer.addEventListener('touchstart', function(e) {
       if (e.touches.length !== 1) return;
       sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
@@ -2773,20 +2778,36 @@ setTimeout(()=>{
   if (!breakdown) {
     summaryPanel.style.display = '';
     (function(){
-      var track = summaryPanel.closest('.stat-carousel-track');
+      var ytGroup = summaryPanel.closest('.stats-group');
+      if (!ytGroup) return;
+      var track = ytGroup.querySelector('.stat-carousel-track');
       if (!track) return;
+      var trackPanels = Array.from(track.children);
+      var idx = trackPanels.indexOf(summaryPanel);
+      if (idx >= 0) {
+        var carousel = track.parentElement;
+        var dotsEl = carousel.querySelector('.stat-carousel-dots');
+        if (dotsEl){
+          var dots = Array.from(dotsEl.children);
+          dots.forEach(function(d){d.classList.remove('active');});
+          if (dots[idx]) dots[idx].classList.add('active');
+        }
+        track.style.transition = 'none';
+        track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+        return;
+      }
+      track.insertBefore(summaryPanel, track.firstChild);
       var carousel = track.parentElement;
-      var panels = Array.from(track.children);
-      var idx = panels.indexOf(summaryPanel);
-      if (idx < 0) return;
       var dotsEl = carousel.querySelector('.stat-carousel-dots');
       if (dotsEl){
-        var dots = Array.from(dotsEl.children);
-        dots.forEach(function(d){d.style.display='';d.classList.remove('active');});
-        if (dots[idx]) dots[idx].classList.add('active');
+        var newDot = document.createElement('div');
+        newDot.className = 'dot active';
+        dotsEl.insertBefore(newDot, dotsEl.firstChild);
+        Array.from(dotsEl.children).forEach(function(d,i){ d.classList.toggle('active', i===0); });
       }
-      track.style.transition = 'none';
-      track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      // Call the carousel's goTo to sync idx and dots after inserting at 0
+      if (carousel._carouselGoTo) carousel._carouselGoTo(0, false);
+      else { track.style.transition = 'none'; track.style.transform = 'translateX(0%)'; }
     })();
     window._ytDeltaSummaryShown = true; window._ytDeltaSummaryCache = summaryPanel.innerHTML; return;
   }
@@ -2818,22 +2839,40 @@ ${rows}
     el.addEventListener('click', () => openSubmission(+el.dataset.id))
   );
   summaryPanel.style.display = '';
-  // On mobile, reveal the summary panel's carousel dot and navigate to it
+  // On mobile, insert the summary panel into the carousel track at position 0 if not already there
   (function(){
-    var track = summaryPanel.closest('.stat-carousel-track');
+    var ytGroup = summaryPanel.closest('.stats-group');
+    if (!ytGroup) return;
+    var track = ytGroup.querySelector('.stat-carousel-track');
     if (!track) return;
+    // If already in track, just navigate to it
+    var trackPanels = Array.from(track.children);
+    var idx = trackPanels.indexOf(summaryPanel);
+    if (idx >= 0) {
+      var carousel = track.parentElement;
+      var dotsEl = carousel.querySelector('.stat-carousel-dots');
+      if (dotsEl){
+        var dots = Array.from(dotsEl.children);
+        dots.forEach(function(d){d.classList.remove('active');});
+        if (dots[idx]) dots[idx].classList.add('active');
+      }
+      track.style.transition = 'none';
+      track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+      return;
+    }
+    // Not in track yet — insert at position 0
+    track.insertBefore(summaryPanel, track.firstChild);
     var carousel = track.parentElement;
-    var panels = Array.from(track.children);
-    var idx = panels.indexOf(summaryPanel);
-    if (idx < 0) return;
     var dotsEl = carousel.querySelector('.stat-carousel-dots');
     if (dotsEl){
-      var dots = Array.from(dotsEl.children);
-      dots.forEach(function(d){d.style.display='';d.classList.remove('active');});
-      if (dots[idx]) dots[idx].classList.add('active');
+      var newDot = document.createElement('div');
+      newDot.className = 'dot active';
+      dotsEl.insertBefore(newDot, dotsEl.firstChild);
+      Array.from(dotsEl.children).forEach(function(d,i){ d.classList.toggle('active', i===0); });
     }
-    track.style.transition = 'none';
-    track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    // Call the carousel's goTo to sync idx and dots after inserting at 0
+    if (carousel._carouselGoTo) carousel._carouselGoTo(0, false);
+    else { track.style.transition = 'none'; track.style.transform = 'translateX(0%)'; }
   })();
   window._ytDeltaSummaryShown = true;
   window._ytDeltaSummaryCache = summaryPanel.innerHTML;
