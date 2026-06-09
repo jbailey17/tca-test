@@ -1490,9 +1490,9 @@ if (window.innerWidth <= 600) {
       if (locked !== 'h') return;
       var dx = e.changedTouches[0].clientX - sx;
       var dt = Date.now() - st;
-      var vel = Math.abs(dx) / dt;
+      var vel = dx / dt; // signed: negative = left swipe, positive = right swipe
       var w = outer.offsetWidth;
-      if (dx < -(w*0.12) || vel > 0.3) goTo(idx+1, true);
+      if (dx < -(w*0.12) || vel < -0.3) goTo(idx+1, true);
       else if (dx > (w*0.12) || vel > 0.3) goTo(idx-1, true);
       else goTo(idx, true);
     }, {passive:true});
