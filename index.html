@@ -1490,10 +1490,14 @@ if (window.innerWidth <= 600) {
       if (locked !== 'h') return;
       var dx = e.changedTouches[0].clientX - sx;
       var dt = Date.now() - st;
-      var vel = dx / dt; // signed: negative = left swipe, positive = right swipe
       var w = outer.offsetWidth;
-      if (dx < -(w*0.12) || vel < -0.3) goTo(idx+1, true);
-      else if (dx > (w*0.12) || vel > 0.3) goTo(idx-1, true);
+      // Use displacement as the primary signal; velocity only counts when
+      // displacement is below threshold AND clearly in one direction.
+      var vel = dx / Math.max(dt, 1);
+      var fastLeft  = dx > -(w*0.12) && dx < 0 && vel < -0.4;
+      var fastRight = dx <  (w*0.12) && dx > 0 && vel >  0.4;
+      if (dx < -(w*0.12) || fastLeft)  goTo(idx+1, true);
+      else if (dx > (w*0.12) || fastRight) goTo(idx-1, true);
       else goTo(idx, true);
     }, {passive:true});
   });
