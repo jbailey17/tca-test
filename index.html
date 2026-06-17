@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -7,6 +8,27 @@
 <style id="cat-paw-style">body.topsecret-mode, body.topsecret-mode * { cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'><ellipse cx='18' cy='25' rx='11' ry='9' fill='%231a1a1a' stroke='%23666' stroke-width='1.2'/><ellipse cx='7' cy='16' rx='5' ry='5' fill='%231a1a1a' stroke='%23666' stroke-width='1.2'/><ellipse cx='13' cy='10' rx='5' ry='5' fill='%231a1a1a' stroke='%23666' stroke-width='1.2'/><ellipse cx='23' cy='10' rx='5' ry='5' fill='%231a1a1a' stroke='%23666' stroke-width='1.2'/><ellipse cx='29' cy='16' rx='5' ry='5' fill='%231a1a1a' stroke='%23666' stroke-width='1.2'/><ellipse cx='18' cy='25' rx='6' ry='5' fill='%23ff8fab'/><ellipse cx='7' cy='16' rx='2.8' ry='2.8' fill='%23ff8fab'/><ellipse cx='13' cy='10' rx='2.8' ry='2.8' fill='%23ff8fab'/><ellipse cx='23' cy='10' rx='2.8' ry='2.8' fill='%23ff8fab'/><ellipse cx='29' cy='16' rx='2.8' ry='2.8' fill='%23ff8fab'/></svg>") 18 26, auto !important; }</style></head>
 <body style="">
 <a id="feedback-btn" href="https://forms.gle/ppsBmAiLdGxstd6eA" target="_blank" rel="noopener" aria-label="Submit feedback"><span class="fb-star">✦</span><span class="fb-label">Feedback</span><span class="fb-star fb-star-extra">✦</span></a>
+<script>
+(function(){
+  var inIframe = false;
+  try { inIframe = window.self !== window.top; } catch(e) { inIframe = true; }
+  if (!inIframe) return;
+  // Replace feedback button with a fullscreen / open-in-new-tab button
+  var fbBtn = document.getElementById('feedback-btn');
+  if (!fbBtn) return;
+  var fullscreenBtn = document.createElement('a');
+  fullscreenBtn.id = 'feedback-btn';
+  fullscreenBtn.href = window.location.href;
+  fullscreenBtn.target = '_blank';
+  fullscreenBtn.rel = 'noopener';
+  fullscreenBtn.setAttribute('aria-label', 'Open in full screen');
+  // Inline SVG: expand/fullscreen icon
+  fullscreenBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span class="fb-label">Full screen</span>';
+  fbBtn.replaceWith(fullscreenBtn);
+  // Mark document so the collapse scroll listener knows to skip
+  document.documentElement.setAttribute('data-in-iframe', '1');
+})();
+</script>
 <header style="position:fixed;top:0;left:0;right:0;z-index:0">
 <div class="header-collage" aria-hidden="true" id="header-collage-bg"><div class="header-collage-col"><img src="https://i.imgur.com/hdpftFX.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/bfT29x5.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/yHHUXHb.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/PA1hVBS.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ly4nxWB.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/tmFw8sx.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/V0p306H.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/9JbA8nJ.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/gLdia0k.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/Q8HJGm6.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/yy0rK78.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/Td2zwNF.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/r1BBULc.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/hCKr9Jp.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/HINoC64.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/eFn71Z7.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/XTIMpXq.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/SpYDZ9V.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/IfUErOz.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/QSXvn6P.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/IesfceY.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/YCuNiOw.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ipQAKQy.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ouX4TOZ.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/53YcCF7.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/E4vDwiI.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/AO3ZeX5.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/hdpftFX.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/bfT29x5.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/yHHUXHb.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/PA1hVBS.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ly4nxWB.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/tmFw8sx.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/V0p306H.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/9JbA8nJ.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/gLdia0k.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/Q8HJGm6.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/yy0rK78.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/Td2zwNF.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/r1BBULc.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/hCKr9Jp.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/HINoC64.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/eFn71Z7.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/XTIMpXq.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/SpYDZ9V.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/IfUErOz.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/QSXvn6P.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/IesfceY.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/YCuNiOw.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ipQAKQy.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/ouX4TOZ.jpeg" alt="" loading="lazy" decoding="async"></div><div class="header-collage-col"><img src="https://i.imgur.com/53YcCF7.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/E4vDwiI.jpeg" alt="" loading="lazy" decoding="async"><img src="https://i.imgur.com/AO3ZeX5.jpeg" alt="" loading="lazy" decoding="async"></div></div>
 <div class="header-collage-overlay" aria-hidden="true"></div>
@@ -30,7 +52,7 @@ bg.appendChild(col);
 }
 })();</script>
 
-<button id="version-btn" aria-label="View changelog">v1.55</button>
+<button id="version-btn" aria-label="View changelog">v2.0</button>
 <div class="brand">
 <button id="home-btn" onclick="if(!window.__flyingCatsStarted){preSearchView=null;state.view='events';state.sort=DEFAULT_SORT['events']||'default';var s=document.getElementById('sort');if(s)s.value=state.sort;scrollToTabs();render();}" aria-label="Go to Events home" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;width:auto;-webkit-tap-highlight-color:transparent;">
 <div class="logo-title" style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;line-height:1;width:auto">
@@ -1657,6 +1679,9 @@ if (window.innerWidth <= 600) {
   });
 }
 // Touch swipe on the stats groups outer container
+var _sgo = document.querySelector('#swipe-track > main[data-view="stats"]') || null;
+var _sgt = _sgo ? _sgo.querySelector('.stats-group-track') : null;
+var _sgGroups = ['people','awards','streaks','overtime','youtube'];
 if (_sgo && _sgt) {
   let _sgTx=0, _sgTy=0, _sgDragging=false, _sgLocked=false;
   _sgo.addEventListener('touchstart', e=>{
@@ -4148,527 +4173,24 @@ resetDrawerTheme();
 }
 const CHANGELOG_ENTRIES = [
 {
-date: '2026-06-13',
-version: 'v1.55',
+date: '2026-06-17',
+version: 'v2.0',
 items: [
-'Proportional timeline: events with multiple films from the same date now collapse into a single tile with a small "+N" badge fused to its left edge (matching the rounded shape and accent border of award/promo tiles). Click the badge to expand the rest as a pop-out overlay that sits above neighboring rows; click again (now showing "×") to collapse.',
-'Proportional timeline: overlapping rows can now be brought to the front. Hovering a film tile, or its timeline dot, raises that event above neighboring ones with a subtle shadow; on touch devices, tapping a row brings it forward and tapping elsewhere restores the default order. The "+N" badge has a hover/tap animation (gold highlight and slight scale) to make it clearly clickable.',
-'Fixed: in proportional mode, overlapping film tiles could cover a neighboring event\'s timeline dot, preventing its date tooltip from appearing on hover. Timeline dots now always stay on top so the tooltip is reliably accessible.',
+'Added missing Greetings From The Alley event/film',
+'Fixed a bunch of miscellaneous missing members in Films and consolidated a few members with their aliases',
+'Added a way to include "anthology" films (single films that multiple teams worked on in sections) while retaining the ability to credit Teams individually and keep Teams\' rosters separate',
+'Added a separate film type for event "Promo" films that now have a white border to visually separate them. Promo films automatically go at the bottom of event drawers in their own section. They are included in stats, but are not included in the Film count at the top of the page. They are also not included in the Team YouTube Playlist feature (this only applies to Team Cinemadrome since they are the only team making promo films, and I did this to make it so that you could watch the Cinemadrome playlist without being interrupted by event promos). Could always change this later since it\'s a bit of a grey area.',
+'Lots of tiny visual tweaks to make things easier to read (e.g. redesigned member/team tiles in their respective tabs)',
+'Team/Member drawer film history has been redesigned as a timeline with a couple adjustable parameters',
+'Team/Member drawers now have an event streak badge to showcase current teams (must include most recent event)',
+'Event drawers now have event descriptions. Not all events have a description included a this time. Will work on that later.',
+'Stats tab has been redesigned to have sub-tabs instead of scrolling through everything.',
+'Included new stats like "Teams by Total Runtime" and Attendance.',
+'YouTube stats now include Comments and Likes and has been redesigned to make it easier to find the specific stat you\'re looking for. Clicking the Refresh button automatically brings up a new stat panel that shows what\'s new since the last refresh.',
+'Added feature where archive can detect if it is in an iframe (such as on cinemadrome.org) and replaces feedback button with "fullscreen" button to open in new tab for easier navigation. This should make it a little easier to navigate on mobile.',
 ],
 },
-{
-date: '2026-06-13',
-version: 'v1.54',
-items: [
-'Proportional timeline: year labels next to each film are now hidden in proportional mode, since the month/year tick marks on the overlay already convey the same information. They reappear when switching back to normal mode.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.53',
-items: [
-'Fixed missing year labels on timeline: the deduplication tracker now only advances when a participated (visible) row is rendered, so hidden missed-event rows no longer consume the year label silently.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.52',
-items: [
-'Member and team timelines no longer repeat the year label for consecutive events in the same year. Only the first event in a given year shows the year number; subsequent events in the same year leave the year column blank.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.51',
-items: [
-'Proportional timeline now respects the newest/oldest sort toggle. In "newest first" mode (default) the most recent event sits at the top; in "oldest first" mode the earliest event sits at the top. The month/year tick mark overlay also flips direction accordingly.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.50',
-items: [
-'Timeline dot hover now shows a custom floating tooltip with the event date instead of a native browser title attribute (which requires a long hover delay and fails on mobile). The label appears immediately on mouseenter and disappears on mouseleave.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.49',
-items: [
-'Timeline dots now show a tooltip on hover with the event date (e.g. "February 26, 2022"). Events with only a month show "Month YYYY"; events with no month data show the year. Applies to both member and team timelines in both normal and proportional modes.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.48',
-items: [
-'Proportional timeline: dot now visually aligns with the month/year tick mark. Each row\'s top position is offset upward by the dot\'s internal margin (8px) plus half its height (4px), so the center of the green dot lands exactly on the date line rather than 12px below it.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.47',
-items: [
-'Fixed proportional timeline toggle: applyPropTl and removePropTl are now real global JS functions rather than code inside a template string (which was the root cause of the button doing nothing). Both member and team timelines share the same helper.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.46',
-items: [
-'Fixed proportional timeline: "newest first" now correctly re-applies proportional positions after toggling sort order. Proportional mode now reads sort keys from data attributes on each row rather than index position, making it immune to DOM reordering. Added month/year tick marks in the gaps — faint horizontal lines labeled with month abbreviations, with bolder year labels at January boundaries. Overlay sits behind the event rows.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.45',
-items: [
-'Added "proportional" toggle button to Member career timeline and Team filmography timeline. When enabled, events are positioned vertically based on their actual date (year + month), so the visual gap between entries reflects real elapsed time — films from the same month cluster tightly, while year-long gaps spread apart. Click again to return to the evenly-spaced default view. The button highlights in gold while active.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.44',
-items: [
-'Film tile year badges and mini-card dates now show month + year only (e.g. "May 2026"). The full date including day (e.g. "May 9, 2026") is reserved for the film drawer subtitle.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.44',
-items: [
-'Film drawer subtitles now show the full date when available (e.g. "March 9, 2024" instead of "Mar 2024"). Falls back to month+year or year-only for events without a day on record.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.43',
-items: [
-'Added specific screening day to 12 events: Sweded 11 (May 9), Tales from the Backyard (December 6), Swede TV (July 26), Sweded X (March 8), Sweded 9 (March 9), 240 Hour Film Race 2023 (October 14), Radaptations 2 (June 24), Sweded 8 (February 11), Radaptations (July 23), Sweded 7 (February 26), Video BBQ (July 9), 48 Hour Film Race 2015 (July 18). For two-night events the Saturday Backyard at Boca Fiesta screening date is used. Also corrected Sweded 7 month from January to February.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.42',
-items: [
-'Replaced trophy emoji + bare number with gold-colored "# awards" text everywhere it appeared: event tile sub-lines and event/team/member drawer subtitle lines. Consistent with the style already used on team and member tiles.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.41',
-items: [
-'Event drawer subtitle now shows the full date instead of just the year number. Events with a known month display e.g. "May 2026"; events with a specific day display e.g. "October 18, 2015". Falls back to year only if no month data is available.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.40',
-items: [
-'Renamed sequential Sweded events with their correct edition numbers: Sweded 2 (2017), Sweded 3 (2018), Sweded 4 (2019), Sweded 5 (2020), Sweded 6 (2021), Sweded 7 (2022), Sweded 8 (2023), Sweded 9 (2024). The original Sweded (2015) is unchanged as the first edition; Sweded X (2025) and Sweded 11 (2026) were already named correctly.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.39',
-items: [
-'Fixed event tile video count for Greetings From The Alley: the ▶ count now shows 2 (the anthology film + promo) instead of 5. Promo videos are excluded and the anthology video_id is only counted once regardless of how many teams contributed.',
-'Fixed global stats inflation caused by anthology films: the 4 Greetings From The Alley team entries sharing the same video now count as 1 film in all global tallies (Films tab count, header stat, Films-by-year chart, YouTube view/comment/like rankings, event view totals, new-views delta panels, and the post-refresh summary). Per-team and per-member stats are unaffected since each team and member only appears in their own entry.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.38',
-items: [
-'Fixed event tile film count for Greetings From The Alley: the tile now shows 1 film (the grouped anthology card) instead of 4 (one per team). Count is now computed from unique film+video_id groups, matching how the event drawer renders them.',
-'Fixed anthology film drawer: opening the Greetings From The Alley card now shows all 4 contributing teams in the byline and lists each team\'s members grouped under their team name, instead of only showing 7 Ashes and their members.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.37',
-items: [
-'Event drawers now group multi-team anthology films into a single card. When multiple submissions share the same film title and video ID, they render as one card listing all contributing teams. Clicking opens the first team\'s submission drawer. Underlying data remains as separate entries for correct per-team and per-member history.',
-],
-},
-{
-date: '2026-06-13',
-version: 'v1.36',
-items: [
-'Added new event: Greetings From The Alley (October 18, 2015). Anthology film shot and screened in The Alley between Arcade Bar and The Atlantic in Gainesville, FL. Features 4 teams with isolated member rosters: Cinemadrome, Stray Train, 7 Ashes, and Sleeping Brontosaurus. Added as 4 separate submission entries so each team and member drawer correctly reflects only their own participation. Includes 1 promo film (Cinemadrome Greetings From The Alley Promo). Added day field to event data model.',
-],
-},
-{
-date: '2026-06-12',
-version: 'v1.35',
-items: [
-'Redesigned Team and Member tiles in the Teams and Members tabs. Stats now display in a 2x2 grid (films, members/teams, awards, year range) instead of a single comma-separated line. Awards are shown in gold text rather than a trophy emoji. Year ranges use full four-digit years (e.g. 2019–2026).',
-'Added promo film "Fall Event 2025 Promo" to Tales from the Backyard 2025 (Cinemadrome team: Dan Jopling, Karl Auffenberg, Barrett Daniel). Added 6 additional promo films sourced from the Cinemadrome YouTube channel: Radaptations Commercial (2022), Cinemadrome Sweded Film Fest 2017 Promo, Cinemadrome Video BBQ Promo (2016), Cinemadrome Sweded Film Fest 2015 Promo, Cinemadrome 48 Hour Film Race 2015 Promo, and Cinemadrome Cinematic Universe Teaser Trailer (2018). promo_count is now 11.',
-],
-},
-{
-date: '2026-06-12',
-version: 'v1.34',
-items: [
-'Added promo film category. Films marked "promo": true are excluded from submission_count meta and event card film counts, but count toward member/team stats and streaks. Promos appear in a "Promo Material" section at the bottom of event drawers, with a grey left border on their film tiles.',
-'Added 3 Cinemadrome promo films to Swede TV 2025: "Shirley Temple Commercial", "Merch Commercial", and "Swede TV Trailer" (Barrett Daniel, Dan Jopling, Karl Auffenberg, Chelsea Oxendine, Sawyer). Swede TV event card now correctly shows 21 genuine submissions. Global submission_count is 335 (excludes 3 promos, tracked separately as promo_count).',
-],
-},
-{
-date: '2026-06-10',
-version: 'v1.32',
-items: [
-'Added "Weighted attendance" panel under the Streaks tab. Ranks members and teams by a recency-weighted consistency score (0–10). Each attended event earns points, but older events decay by a factor of 0.88 per event — so missing recent events hurts more than missing early ones. Perfect attendance scores 10.0. Requires >3 credited films.',
-],
-},
-{
-date: '2026-06-10',
-version: 'v1.31',
-items: [
-'Added "Perfect attendance" panel under the Streaks tab. Lists every member and team (with >3 credited films) who have never missed an event since their first appearance and participated in the most recent event. Ranked by number of events attended. Toggle between Members and Teams tabs.',
-],
-},
-{
-date: '2026-06-10',
-version: 'v1.30',
-items: [
-'Member and Team timeline drawers now have a "Show missed events" checkbox (off by default). Check it to see events within the career span that were skipped, shown as faded entries with a dim dot. Each missed entry links to the event. The existing "Show team" and "Show members" checkboxes now sit on the same row as the new one.',
-],
-},
-{
-date: '2026-06-07',
-version: 'v1.29',
-items: [
-'The Stats tab now has a sub-navigation row — People · Awards · Streaks · Over time · YouTube — so only one section is visible at a time instead of a long scroll through all panels at once. The sub-nav is a scrollable pill row on mobile, matching the main tab bar behaviour. Your last-selected section is remembered if you switch to another tab and come back.',
-],
-},
-{
-date: '2026-06-07',
-version: 'v1.28',
-items: [
-'After clicking Refresh in the YouTube stats panel, film tiles in Member and Team timeline drawers now show a green +N badge at the far right indicating new views gained since the last baked baseline. Tiles with no new views (or +0) show nothing.',
-'Fixed a bug where clicking Refresh while a YouTube stat panel was on the New tab would display Total data instead of New data. The panel now correctly re-renders New data after a Refresh.',
-],
-},
-{
-date: 'June 6, 2026',
-version: 'v1.27',
-items: [
-'Moved the Refresh and Refresh & Download buttons into the YouTube section header, sitting right next to the "YouTube" label. The "Last updated" timestamp now sits to the far right of the header row.',
-'The post-refresh "Since Last Refresh" summary now appears as a standard-sized panel in the YouTube panel grid, rather than spanning the full page width.',
-'The "Since Last Refresh" summary panel now persists when you switch to another tab and come back — previously it would disappear on tab switch.',
-'Total / New mode pills in the YouTube stat panels now have distinct active colors: Total highlights white when selected, New highlights green.',
-'Fixed drawer titles for the New Views See All panels — they now read "New Views — Films" and "New Views — Teams" for consistency with the rest of the section.',
-'Added "Total Runtime of All Films" to the Teams by Total Runtime panel description, displayed in gold.',
-],
-},
-{
-date: '2026-06-05',
-version: 'v1.26',
-date: 'June 6, 2026',
-items: [
-'Reorganized the YouTube stats section: the many separate panels for most-viewed, most-commented, and most-liked films/teams/members/events are now consolidated into three tabbed panels — Views, Comments, and Likes. Use the pills at the top of each panel to switch between Films, Teams, Members, and Events.',
-'Each of the three YouTube stat panels now has a Total / New mode toggle. Switching to New shows how much each film, team, member, or event has gained since the last saved baseline, rather than their all-time totals.',
-'After clicking Refresh, a summary panel appears showing total new views, comments, and likes since the last baseline, with a breakdown of the top films that gained new activity in each category.',
-'Teams by Total Runtime moved from the YouTube section into the Prolific & Long-running section.',
-'The Refresh button panel and post-refresh summary panel now sit alongside the other YouTube stat panels rather than spanning the full page width.',
-'The See all drawer title now reflects the active tab combination — for example "New Views — Teams" or "Total Comments — Films".',
-'"See all ›" indicator added to the Views, Comments, and Likes panels.',
-],
-},
-{
-version: 'v1.25',
-items: [
-'The YouTube Stats tab now pulls like counts and video durations from the YouTube API whenever you hit Refresh — no extra API quota cost since it\'s bundled into the same request.',
-'Refreshing & Downloading now bakes like counts and durations into the file, so they\'re available on next load without needing to refresh again.',
-'Like counts and video duration (e.g. 4:33) now appear on each film\'s drawer page alongside the view and comment counts.',
-'Added five new YouTube stat panels: Films with Most Likes, Teams with Most Likes, Teams with Most Total Runtime, Most Likes Above Expectation, and Films with Most New Likes (the last one appears after clicking Refresh).',
-'The "Most Likes Above Expectation" panel ranks films by how many more likes they got than you\'d predict from their view count alone — prevents low-view videos with a handful of friend-likes from dominating the list. The subtitle shows the exact formula and archive-wide average used.',
-'Fixed a bug where Films with Most Likes, Teams with Most Likes, Most Likes Above Expectation, and Teams with Most Total Runtime were only showing up after a Refresh — they now populate on page load from the baked data.',
-'Fixed a bug where clicking Refresh would not show the Films with Most New Likes panel.',
-'Fixed a bug where clicking Refresh would not show the Films with Most New Comments panel.',
-'Fixed a bug where comment counts, like counts, and durations were not being passed into the stats renderer after a live Refresh (they were passed as undefined, so all the related panels stayed empty).',
-'Fixed a syntax error introduced in v1.24 that caused the page to fail to load entirely.',
-]
-},
-{
-date: '2026-06-03',
-version: 'v1.24',
-items: [
-'The "Films with Most New Views" and "Teams with Most New Views" panels now have a "See all" button, just like the other YouTube stat panels.',
-'When you open a film and then hit Refresh, the view count in that film\'s drawer now updates straight away — no need to close and reopen it.',
-'If you open a film after hitting Refresh, the view count now shows the freshly fetched number (with the green "+views" indicator) instead of the old saved one.',
-'The share button now disappears on drawers that don\'t have a shareable link (like stats panels), so it\'s always clear when copying a link actually makes sense.',
-'Fixed a bug where copying a link from one drawer and then opening a different non-shareable drawer would still copy the old link.',
-'"Link copied!" now pops up right next to the share button instead of at the bottom of the screen.',
-'Hovering over the share button now shows a "Copy link" tooltip.',
-'Fixed a bug that was causing a script error on page load due to some code ending up in the wrong place in the file.',
-'Added an inline favicon so the browser no longer shows a console error about a missing icon file.',
-'Removed the gold left border that highlighted award-winning films in the grid — all film tiles now look the same.',
-]
-},
-{
-date: '2026-06-01',
-version: 'v1.23',
-items: [
-'Removed emojis from the sort dropdown and stats panels.',
-'Replaced gold/silver/bronze medal icons with plain numbers (1, 2, 3) in all stat panels.',
-'Fixed a layout bug where the count column in the "Members on Most Different Teams" panel was misaligned for the top entry.',
-'Added rank numbers to the Back-to-back streak panels, which were previously missing them.',
-'Improved the sort dropdown styling to match the site aesthetic.',
-'Removed the non-functional "Sort: Default" option from the dropdown.',
-'Added two new stat panels in Awards & Trophies: "Winning Streaks by Event" and "Winning Streaks by Year", showing teams with the longest consecutive award-winning runs.',
-]
-},
-{
-date: '2026-06-01',
-version: 'v1.22',
-items: [
-'Added \'Sort by Views\' option to the Films tab sort controls.',
-'Added a couple of missing data points from films/teams.',
-'Fixed the search function so that it now searches Film titles more accurately, rather than only matching Members and Teams.',
-'YouTube stat panels centred around \'new views\' are now automatically hidden until you press the Refresh button, keeping the Stats tab cleaner on first load.',
-'Added a \'Teams with Most New Views\' stat panel to the YouTube stats section.',
-'Visual tweak: the \'Team YouTube Playlist\' button in Team drawers now highlights on mouse-over, matching the pill button hover animation.',
-'The Cinemadrome Archive header now navigates back to the Events tab when clicked, instead of refreshing the page.',
-]
-},
-{
-date: '2026-05-26',
-version: 'v1.21',
-items: [
-'Added a \"[Team Name] YouTube Playlist\" button in Team drawers that links all of that team\'s films as a YouTube playlist in chronological order (earliest to most recent).',
-]
-},
-{
-date: '2026-05-25',
-version: 'v1.20',
-items: [
-'Added a top secret function that when you press and hold on ....... wait maybe I shouldn\'t be putting this here. it\'s too top secret',
-]
-},
-{
-date: '2026-05-24',
-version: 'v1.19',
-items: [
-'Fixed missing spaces in the Most New Views panel between team names and the middle dot separator (e.g. "Hell Toupee· 2025" → "Hell Toupee · 2025").',
-'Fixed missing spaces between count and label in stat "See all" drawer subtitles (e.g. "142members" → "142 members").',
-'Fixed stat panel "See all" drawer titles including the "See all ›" label text (e.g. "Most prolific members See all ›" → "Most prolific members").',
-'Fixed clicking a YouTube stats panel "See all" drawer causing the page to scroll back to the top. The body scroll-lock is now only applied when the drawer is first opened, not on subsequent in-drawer navigation.',
-'Fixed missing spaces in YouTube stats "Most Viewed Events" panel and drawer: event names now display as "Sweded (2024)" instead of "Sweded(2024)", and the drawer subtitle now reads "27 events" instead of "27events".',
-'Fixed tab-switch scroll bug on desktop where switching to the Awards tab (which has few entries) would scroll the page above the tab bar. The scroll target is now always reachable by temporarily extending page height if needed.',
-'Fixed: Refreshed YouTube view counts are now preserved when switching tabs. Previously, navigating away from the Stats tab and back would clear the live-fetched counts, requiring a second refresh. A module-level cache (YT_LIVE) now holds the most recently fetched data and re-populates the panels on every Stats re-render.',
-]
-},
-{
-date: '2026-05-24',
-version: 'v1.18',
-items: [
-'Long member lists in drawers now collapse to the first 8 entries by default, with a \"Show N more\" button to expand — mirroring how long Film descriptions behave. Applies to Members in Film drawers, Members/Awards in Team drawers, Teams/Awards in Member drawers, and Teams/Members in Award drawers.',
-'Switching tabs now scrolls the content list back to the top while keeping the tab bar pinned at the top of the screen. Works whether you switch by tapping a tab or swiping.',
-],
-},
-{
-date: '2026-05-24',
-version: 'v1.17',
-items: [
-'Clearing the search bar (by deleting all text or tapping the ✕ button) now returns you to whichever tab you were on before the search auto-switched tabs. Manually clicking a tab while searching updates the home base, so clearing always goes back to the last tab you intentionally chose.',
-'Made drawer swipe-to-close feel lighter on mobile: commit distance reduced from 38% to 22% of drawer width (shorter drag required), flick velocity threshold lowered from 0.4 to 0.22 (lighter flick closes the drawer), and horizontal direction lock now activates at 4px instead of 6px (faster intent detection).',
-],
-},
-{
-date: '2026-05-23',
-version: 'v1.16',
-items: [
-'Fixed missing spaces between film count and middle dot in the subtitle line of Member, Team, and Event rollup drawers (e.g. "3 films · 2018–2026" was rendering as "3 films· 2018–2026").',
-'Fixed missing spaces in the YouTube stats page buttons: "↻Refresh" now reads "↻ Refresh", "⇓Refresh & Download" now reads "⇓ Refresh & Download", and "►Fetch &Lock view counts" now reads "► Fetch & Lock view counts".',
-'Fixed missing spaces in Film drawer: team name and middle dot separator (e.g. "Hell Toupee·" → "Hell Toupee ·"), and between event name and date parenthetical (e.g. "Sweded 11(May 2026)" → "Sweded 11 (May 2026)").',
-],
-},
-{
-date: '2026-05-23',
-version: 'v1.15',
-items: [
-'Fixed a bug where clicking "Refresh & Download" produced a file 35\u201360 KB larger than the source, and caused layout issues (tabs bar above the header, header hidden off-screen, wrong page body margin) when the downloaded file was reopened. The download was serialising the live DOM via outerHTML, capturing all runtime mutations from inline scripts. The fix snapshots outerHTML via a DOMContentLoaded listener and reverses the three known mutations before saving, so the download is a clean copy of the source with only the new YT_BAKED view count data patched in.',
-'Fixed the header collage script to guard against double-creation on downloaded files: the script now checks whether columns are already present before appending new ones.',
-'Fixed the YT_BAKED substitution regex to match the declaration regardless of whitespace before the opening brace, which was preventing view count data from being embedded in downloads.',
-],
-},{
-date: '2026-05-23',
-version: 'v1.14',
-items: [
-'Updated award type display names to include spaces around the slash for improved word wrapping in tiles: "Best Cinematography / Special Fx" and "Best Cinematography / Editing".',
-'Updated event poster image URLs for 10 events: VID-E-UWE BOLL (2016), 48 Hour Film Race (2016), Sweded (2017), Sweded (2018), 48 Hour Film Race (2018), Sweded (2019), Shakespeare in the Backyard (2019), 240 Hour Film Race (2019), Captain Asteroid: Season 2 (2019), and Sweded (2020).',
-'Fixed missing date field on v1.12 changelog entry.',
-'Corrected several award discrepancies found via master list cross-reference: replaced "Best Original Cooking Show Concept" with "Best Film/Swede" for He Made Good Hashbrowns (Video BBQ 2016); changed "Best Co-Hosts" to "Best Performance" for Cooking with Burnt Out Conan and Tweakin Topher (Video BBQ 2016); changed "Best Host" to "Best Performance" for Marinara (Video BBQ 2016); added "Best Sound Design" to Sharknado (Sweded 2023); added "Best Performance" to The Devil\x27s Advocate (Sweded 2023); renamed team A420 to Mucas Films (Sweded 2020); fixed apostrophe in Bram Stoker\x27s Dracula (Sweded 2017).',
-],
-},{
-date: '2026-05-23',
-version: 'v1.12',
-items: [
-'Removed 12 dead CSS declarations to reduce file size: unused CSS variable --accent-2, .brand h1 and .brand .sub (logo uses img/spans, not a heading), .clear and .clear:hover (no clear-filters button in the HTML), and utility helper classes .u-text-dim-sm, .u-text-faint-sm, .u-mt-small, .u-pad-20, .u-ct-tabular, .u-section-divider, and .u-section-label (defined but never applied to any element).',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.11',
-items: [
-'Version button in the top-right corner now highlights on hover. Styles moved from inline to the stylesheet so the hover rule can correctly override the default background. On hover, text brightens from faint grey to full white, border steps up to the stronger border colour, and a subtle white tint background appears — staying within the button neutral palette rather than switching to the accent colour.',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.10',
-items: [
-'Fixed a jank/snap issue with the header parallax animation when scrolling quickly back to the top. The root cause was an interaction between the body scroll lock (position:fixed applied when a drawer is open) and the parallax handler: while locked, window.scrollY reads as 0, causing the header to silently snap to the fully-visible position. When the drawer closed and scroll position was restored via scrollTo(), a stale rAF would then re-read the wrong scrollY and produce a visible jump.',
-'Parallax scroll handler now bails out immediately — both at event time and inside the rAF callback — if the body scroll lock is active, preventing any spurious transform updates during the locked state.',
-'closeDrawer() now eagerly applies the correct translateY transform synchronously at the known savedScrollY immediately after restoring scroll position, so the header is already in the right place before any scroll event can fire.',
-'Added will-change:transform to the header CSS to promote it to its own compositor layer, ensuring parallax updates are handled off the main thread without triggering layout or paint.',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.9',
-items: [
-'Feedback button now stays collapsed when a drawer is open, preventing it from expanding over drawer content. Implemented via a MutationObserver watching each drawer for class changes.',
-'Stats panel carousels on mobile now respond to much lighter gestures. Commit threshold reduced from 28% to 12% of panel width, velocity-based snapping added so a quick flick advances the panel even with minimal drag distance, and horizontal intent is detected sooner.',
-'Teams tab "Most Members" sort now correctly ranks by unique member entries across all of a team\'s submissions. Unique member count is also now displayed on every team card.',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.8',
-items: [
-'Fixed Feedback button being obscured by the sticky nav bar when scrolling. A duplicate z-index declaration in the CSS was overriding the intended value, causing the button to render beneath the filters and tabs.',
-'Feedback button now collapses to a small animated sparkle circle as soon as you scroll past the top of the page, and expands back to the full labeled button when you return to the top.',
-'Only the tabs bar now sticks to the top of the screen when scrolling. The search and filter bar scrolls away with the page content.',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.7',
-items: [
-'The search/filter bar and tabs nav now stay pinned to the top of the screen when scrolling down the page. Implemented via a scroll-based JavaScript approach using a sentinel element to detect scroll position, switching the nav wrapper to fixed positioning once it leaves the viewport — working around browser limitations that prevent CSS sticky from functioning inside overflow:hidden containers.',
-],
-},
-{
-date: '2026-05-23',
-version: 'v1.6',
-items: [
-'Improved swipe animation smoothness on mobile. Fast flicks now complete much quicker (min animation duration reduced from 120ms to 60ms,and duration now scales inversely with velocity). Easing curve updated to start fast and decelerate,matching natural flick momentum. Velocity sampling window widened from 80ms to 120ms so fast flicks are measured accurately.',
-'Fixed a bug where swiping left (e.g. Teams → Films) would sometimes trigger a vertical scroll. A two-frame gap before the swipe animation became active was leaving touchmove events unblocked,letting the browser treat them as scrolls. Right swipes were unaffected because their track repositioning happened immediately. Fix: preventDefault is now called as soon as direction is locked to horizontal,regardless of animation state.',
-]
-},
-{
-date: '2026-05-23',
-version: 'v1.5',
-items: [
-'Improved horizontal swipe accuracy on mobile: tab swipes now require more deliberate motion before direction is locked (threshold raised from 6px to 10px),and a horizontal bias means a slightly arcing thumb swipe is no longer misread as a vertical scroll. Pure vertical scrolling is unaffected.',
-'Clicking the Cinemadrome Archive header logo now refreshes the page (previously switched to the Events tab via JS,which is equivalent since Events is the default state).',
-'Sort dropdown is now visually grayed out and disabled when the Stats tab is active,since sort has no effect on stats panels.',
-]
-},
-{
-date: '2026-05-22',
-version: 'v1.4',
-items: [
-'Fixed: All stats panels now correctly credit co-produced films to all participating teams. Previously,co_teams were missed in: Most prolific teams,Longest-running teams,Most decorated teams,Back-to-back teams streaks,and the Most viewed teams YouTube panel. Lord of the Rings (Cinemadrome + The Boy Toys) was the only affected film.',
-'Cleaned up team_aliases data: removed four entries (The Gangrene Girls,The Naughty Popcorn Cinema Group,The Greasy Beavers,36mm Films) that were just display_name shortenings rather than true event-night aliases. Only 1More Films and Butts in Heaven 69 carry genuine aliases.',
-]
-},
-{
-date: '2026-05-22',
-version: 'v1.3',
-items: [
-'Fixed swipe conflict in the Stats tab on mobile: swiping inside a stat panel carousel (e.g. Prolific & Long-Running) now only moves between panels within that group. Previously,swiping left through panels would also trigger the tab-switching swipe gesture. Swipes that begin outside a carousel still navigate between tabs as expected.',
-]
-},
-{
-date: '2026-05-22',
-version: 'v1.2',
-items: [
-'Clicking a name row inside a stat drawer now opens that team\'s,member\'s,or award\'s full rollup drawer,with back-navigation support.',
-'\"Refresh & Download\" now saves the file with a dynamic filename that includes the current version number and today\'s date (e.g. Cinemadrome_Archive_v1.2_2026-05-22.html).',
-'Added extra top padding on mobile to prevent the Feedback button from crowding the header logo.',
-'On mobile,stat panels within each Stats section (e.g. \"Prolific & long-running\") are now swiped horizontally as a carousel with dot indicators,while sections themselves scroll vertically. Desktop layout is unchanged.',
-]
-},
-{
-date: '2026-05-22',
-version: 'v1.1',
-items: [
-'Added a Feedback button in the top-left corner of the header with a sparkle animation. Clicking it opens a Google Form for submitting comments and feature requests.',
-'Added version badge (v1.1) in the top-right corner of the header. Clicking it opens this changelog drawer.',
-'Added a separate "↓ Refresh & Download" button next to the refresh button. "↻ Refresh" now only updates view counts in-page without downloading a file;"Refresh & Download" retains the original bake-and-download behaviour.',
-'Most viewed teams,members,and events lists expanded from top 10 to top 15.',
-'Added "Most new views since last refresh" chart to the YouTube stats section — shows top 30 films by views gained since the previous lock,with green bar chart.',
-'Clicking any stat panel (e.g. "Most prolific members") opens a drawer showing the complete full list with no entry cap.',
-'Stat panels now animate on hover (border highlight + lift) and on mobile press,matching the behaviour of film cards.',
-'Added "See all ›" label and click-to-drawer functionality for YouTube stats panels (Most viewed films,teams,members,and events). Clicking a YT panel opens a full ranked list drawer with all entries.',
-'Stat panel rows (teams,members,awards,events) are now clickable inside stat drawers — clicking a name opens that entity\'s full rollup drawer,with back-navigation support.',
-]
-},
-{
-date: '2026-05-21',
-items: [
-'Added "Most viewed films","Most viewed teams","Most viewed members",and "Most viewed events" panels to the YouTube section of the Stats tab,populated when view counts are fetched.',
-'Added YouTube view count "Fetch & Lock" functionality — fetches live view counts from the YouTube Data API and bakes them into the file for instant loading on future opens.',
-'Added a "Back-to-back members by event" stat panel tracking the longest streak of consecutive events (not just consecutive years).',
-'Added award-to-film ratio stat for teams in the Stats tab.',
-]
-},
-{
-date: '2026-05-08',
-items: [
-'Improved member search result ordering — when searching,results whose names contain the search term now appear first,before other partial matches.',
-'Fixed mobile drawer scroll bleed-through: scrolling at the top of an open drawer no longer scrolls the page behind it.',
-'Added a frosted glass safe-area cap at the top of the drawer on mobile to cover the status bar / notch area.',
-'Fixed page scroll position jumping when closing a drawer on mobile — the page now returns to exactly where it was.',
-'Added swipe-right-to-close and swipe-back-through-history gesture for drawers on mobile.',
-'Added a sticky title bar inside the drawer that fades in when you scroll past the main heading.',
-]
-},
-{
-date: '2026-05-07',
-items: [
-'Made the archive publishable as a website via GitHub Pages.',
-'Added YouTube playlist button to each event drawer,linking directly to the corresponding Cinemadrome YouTube playlist.',
-'Added poster-derived color theming to drawers — when opening an event,team,or film drawer,the UI colors shift to match the poster or thumbnail.',
-'Film drawers now apply color theming derived from the YouTube thumbnail.',
-'Added full drawer navigation history with a ← Back button and swipe-back support,allowing navigation from team → member → film and back.',
-'Added member chip clicks inside team drawers to open individual member drawers.',
-]
-},
-{
-date: '2026-05-03',
-items: [
-'Added Stats tab with panels for: most prolific members and teams,longest-running teams,most decorated teams,most awarded members,members on most different teams,back-to-back teams and members by consecutive year,films per year chart,and new members per year chart.',
-'Added event poster thumbnails to the Events tab grid cards.',
-'Added event month/year metadata so events sort correctly by month within a year.',
-'Added "Load images" file input button (later removed) for loading a sidecar JSON with event,team,and member images.',
-'Embedded event poster images directly as URLs in the data,removing the need for the sidecar JSON.',
-]
-},
-{
-date: '2026-05-01',
-items: [
-'Fixed search function — search now correctly filters films,teams,members,and awards as you type.',
-'Added sort options for trophies,most films,most members,A→Z,Z→A,oldest,and newest.',
-'Added "The" and "ARCHIVE" text to the header logo,flanking the Cinemadrome image.',
-'Styled header logo text to match the site\'s gold accent color,centered and sized to complement the Cinemadrome logo image.',
-'Removed the "over a decade of backyard cinema" tagline from the header.',
-'Adjusted spacing between "THE",the logo image,and "ARCHIVE" in the header.',
-'Removed italic styling from "THE" and "ARCHIVE" header words.',
-'Made "THE" and "ARCHIVE" smaller so the Cinemadrome logo image stands out more.',
-'Applied a color filter to the Cinemadrome logo image to match the site\'s gold/amber color scheme.',
-]
-},
-{
-date: '2026-04-01',
-items: [
-'Original archive built — Films,Events,Teams,Members,and Awards tabs with search,filters,and sort. Drawer-based detail views for all entity types.',
-]
-}
+
 ];
 function openChangelog(){
 const changes = CHANGELOG_ENTRIES.slice(0, 5);
@@ -6739,6 +6261,8 @@ if (nextEl) observer.observe(nextEl,{childList: true,subtree: false});
 </script>
 <script>
 (function(){
+  // Skip collapse behaviour when running inside an iframe (fullscreen btn is shown instead)
+  if (document.documentElement.getAttribute('data-in-iframe') === '1') return;
   var btn = document.getElementById('feedback-btn');
   var header = document.querySelector('header');
   function updateBtn(){
@@ -6836,7 +6360,7 @@ if (nextEl) observer.observe(nextEl,{childList: true,subtree: false});
 // transform, page-body margin-top). refreshAndDownload() uses this snapshot so
 // the downloaded file is byte-close to the original source.
 document.addEventListener('DOMContentLoaded', function() {
-  var html = document.documentElement.outerHTML;
+  var html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
   // 1. Unwrap nav-sentinel + nav-wrapper back to bare <nav>
   html = html.replace(
