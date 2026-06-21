@@ -370,6 +370,12 @@ const eventMetaByKey ={};
 for (const e of DATA.events) eventMetaByKey[`${e.name}|${e.year}`] = e;
 function thumbUrl(id,q='mqdefault'){return id ? `https://i.ytimg.com/vi/${id}/${q}.jpg` : '';}
 function watchUrl(id){return id ? `https://www.youtube.com/watch?v=${id}` : '';}
+function viewsFor(s){
+if (!s || !s.video_id) return undefined;
+if (YT_LIVE && YT_LIVE.viewMap && YT_LIVE.viewMap[s.video_id]!==undefined) return YT_LIVE.viewMap[s.video_id];
+if (typeof YT_BAKED!=='undefined' && YT_BAKED && YT_BAKED.views && YT_BAKED.views[s.video_id]!==undefined) return YT_BAKED.views[s.video_id];
+return undefined;
+}
 function fmtDuration(iso){if(!iso)return'';const m=iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);if(!m)return'';const h=parseInt(m[1]||0),mn=parseInt(m[2]||0),s=parseInt(m[3]||0);if(h)return `${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}`;return `${mn}:${String(s).padStart(2,'0')}`;}
 
 const PLAYLIST_MAP ={
@@ -485,6 +491,90 @@ return fuzzyContains(hay,q);
 }
 function esc(s){
 return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// Build a flat "ranked by views" list of a member's/team's films, replacing the
+// timeline view. `subs` is the full list of submissions for the entity (promos
+// excluded). `order` is 'desc' (most→least) or 'asc' (least→most). Rank numbers
+// always reflect position by most views (e.g. the least-viewed film of 14 is
+// rank #14), regardless of which direction the list is currently displayed in.
+function renderViewsRankList(subs, kind, order){
+const nonPromo = subs.filter(s=>!s.promo && s.video_id);
+const rankedDesc = nonPromo
+.map(s=>({s,views: viewsFor(s)}))
+.filter(r=>r.views!==undefined)
+.sort((a,b)=> b.views-a.views)
+.map((r,i)=>({...r, rank: i+1}));
+const missingCount = nonPromo.length - rankedDesc.length;
+if (!rankedDesc.length){
+return `<div class="empty" style="padding:24px 16px">No view data available yet for these films.</div>`;
+}
+const ranked = order==='asc' ? [...rankedDesc].reverse() : rankedDesc;
+const rowsHtml = ranked.map(r=>{
+const s = r.s;
+const rank = r.rank;
+const awardPills = s.awards.length ? `<span style="font-size:12px;color:var(--gold)">${s.awards.map(a=>esc(a)).join(' · ')}</span>` : '';
+const eventLabel = `<span class="event-link" data-event="${esc(s.event)}|${s.year}" onclick="event.stopPropagation()" style="font-size:12px;color:var(--text-faint);cursor:pointer" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-faint)'">${esc(s.event)}</span>`;
+const teamOrMemberExtra = kind==='member' && s.team
+? `<div style="margin-top:3px"><span class="team-link" data-team="${esc(s.team)}" onclick="event.stopPropagation()" style="font-size:11px;color:var(--text-dim);cursor:pointer" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-dim)'">${esc(s.display_team||s.team)}</span></div>`
+: '';
+const viewsStr = r.views.toLocaleString();
+return `<div class="mini-card" data-id="${s.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg-elev-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:0;min-width:0;overflow:hidden;transition:background 0.12s,border-color 0.12s" onmouseover="this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)'">
+  <div style="flex-shrink:0;width:26px;text-align:center;font-size:13px;font-weight:700;color:${rank<=3?'var(--gold)':'var(--text-faint)'}">${rank}</div>
+  <div style="flex-shrink:0;width:60px;height:40px;border-radius:6px;overflow:hidden"><img loading="lazy" src="${thumbUrl(s.video_id)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>
+  <div style="min-width:0;flex:1">
+    <div style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.film?esc(s.film):'<em style="opacity:0.5">untitled</em>'}</div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px">${eventLabel}${awardPills}</div>
+    ${teamOrMemberExtra}
+  </div>
+  <div style="flex-shrink:0;text-align:right;font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${viewsStr}<div style="font-size:10px;font-weight:500;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.04em;margin-top:1px">views</div></div>
+</div>`;
+}).join('');
+const missingNote = missingCount>0 ? `<div style="font-size:11px;color:var(--text-faint);margin-top:8px">${missingCount} film${missingCount>1?'s':''} without view data not shown</div>` : '';
+return `<div style="display:flex;flex-direction:column;gap:6px">${rowsHtml}</div>${missingNote}`;
+}
+// Toggle a timeline section between the timeline view and the views-rank list.
+// btn is the "Sort by views" button; tlId is the id of the timeline container element.
+function toggleViewsRank(btn, tlWrapId, subsVarName, kind){
+const wrap = document.getElementById(tlWrapId);
+if (!wrap) return;
+const section = wrap.closest('section') || wrap.parentNode;
+const isRanked = wrap.dataset.mode === 'views';
+if (!isRanked){
+wrap.dataset.mode = 'views';
+wrap.dataset.order = wrap.dataset.order || 'desc';
+btn.textContent = wrap.dataset.order==='desc' ? '↓ Most views' : '↑ Least views';
+btn.style.color = 'var(--accent)';
+btn.style.borderColor = 'rgba(255,181,71,0.4)';
+btn.style.background = 'rgba(255,181,71,0.08)';
+}else{
+wrap.dataset.order = wrap.dataset.order==='desc' ? 'asc' : 'desc';
+btn.textContent = wrap.dataset.order==='desc' ? '↓ Most views' : '↑ Least views';
+}
+const subs = window[subsVarName];
+wrap.querySelector('[data-tl-view]').style.display = 'none';
+wrap.querySelector('[data-rank-view]').style.display = 'block';
+wrap.querySelector('[data-rank-view]').innerHTML = renderViewsRankList(subs, kind, wrap.dataset.order);
+const back = section.querySelector('[data-rank-back]');
+if (back) back.style.display = '';
+section.querySelectorAll('[data-tl-only-btn]').forEach(function(el){ el.style.display = 'none'; });
+}
+function exitViewsRank(tlWrapId){
+const wrap = document.getElementById(tlWrapId);
+if (!wrap) return;
+const section = wrap.closest('section') || wrap.parentNode;
+delete wrap.dataset.mode;
+wrap.querySelector('[data-tl-view]').style.display = '';
+wrap.querySelector('[data-rank-view]').style.display = 'none';
+const back = section.querySelector('[data-rank-back]');
+if (back) back.style.display = 'none';
+section.querySelectorAll('[data-tl-only-btn]').forEach(function(el){ el.style.display = ''; });
+const btn = section.querySelector('[data-views-btn]');
+if (btn){
+btn.textContent = 'Sort by views';
+btn.style.color = 'var(--text-faint)';
+btn.style.borderColor = 'var(--border)';
+btn.style.background = 'var(--bg-elev-2)';
+}
 }
 function scrollToTabs(){
 const sentinel = document.getElementById('nav-sentinel');
@@ -3451,7 +3541,7 @@ return `<span class="view-count" title="View count as of ${YT_BAKED.fetched}">�
 return '';
 })()}</div>` : ''}
 ${s.description ? `<section><h3>Description</h3><div class="desc-collapsible${s.description.length > 200 ? ' collapsed' : ''}" data-long="${s.description.length > 200 ? '1' : '0'}"><div class="desc-text" style="color:var(--text-dim);font-size:13px;white-space:pre-wrap;line-height:1.6">${esc(s.description)}</div>${s.description.length > 200 ? `<button class="desc-toggle" aria-label="Toggle description"><i class="desc-arrow">▾</i> Read more</button>` : ''}</div></section>` : ''}
-${s.awards.length ? `<section><h3>Awards</h3>${s.awards.map(a=>`<div class="award-row award-link" data-award="${esc(a)}">🏆 ${esc(a)}</div>`).join('')}</section>` : ''}
+${s.awards.length ? `<section><h3>Awards</h3>${s.awards.map(a=>`<div class="award-row award-link" data-award="${esc(a)}">${esc(a)}</div>`).join('')}</section>` : ''}
 <section>
 <h3>${anthologyEntries ? 'All team members' : 'Team members'}${(anthologyEntries ? anthologyEntries.flatMap(e=>e.members) : s.members).length?` (${(anthologyEntries ? anthologyEntries.flatMap(e=>e.members) : s.members).length})`:''}</h3>
 ${(()=>{
@@ -3482,7 +3572,7 @@ function openRollup(kind,key){
 let title,subs;
 if (kind==='member'){title = key;subs = subsByMember.get(key)||[];}
 else if (kind==='team'){title = key;subs = subsByTeam.get(key)||[];}
-else if (kind==='award'){title = `🏆 ${key}`;subs = subsByAward.get(key)||[];}
+else if (kind==='award'){title = key;subs = subsByAward.get(key)||[];}
 else if (kind==='event'){
 const [evName,evYear] = key.split('|');
 title = `${evName} (${evYear})`;
@@ -3531,7 +3621,7 @@ const totalAwards = sortedAwards.reduce((n,[,ct])=>n+ct,0);
 teamMembersHtml+=`<section>
 <h3>Awards (${totalAwards})</h3>
 <div class="members-list">${sortedAwards.map(([name,ct])=>
-`<span class="award-chip award-link" data-award="${esc(name)}">🏆 ${esc(name)}<span style="margin-left:6px;font-size:11px;opacity:0.7">${ct}</span></span>`
+`<span class="award-chip award-link" data-award="${esc(name)}">${esc(name)}<span style="margin-left:6px;font-size:11px;opacity:0.7">${ct}</span></span>`
 ).join('')}</div>
 </section>`;
 }
@@ -3555,7 +3645,7 @@ const totalAwards = sortedAwards.reduce((n,[,ct])=>n+ct,0);
 memberTeamsHtml+=`<section>
 <h3>Awards (${totalAwards})</h3>
 <div class="members-list">${sortedAwards.map(([name,ct])=>
-`<span class="award-chip award-link" data-award="${esc(name)}">🏆 ${esc(name)}<span style="margin-left:6px;font-size:11px;opacity:0.7">${ct}</span></span>`
+`<span class="award-chip award-link" data-award="${esc(name)}">${esc(name)}<span style="margin-left:6px;font-size:11px;opacity:0.7">${ct}</span></span>`
 ).join('')}</div>
 </section>`;
 }
@@ -3699,8 +3789,10 @@ const tlRows = eventsInCareer.map((ek, i) => {
   const evYear = +evYearStr;
   const dotColor = participated ? '#1D9E75' : 'var(--border-strong,#555)';
   const filmChips = yrSubs.map(s=>{
-    const awardPills = s.awards.length ? `<span style="font-size:12px;color:var(--gold)">🏆 ${s.awards.map(a=>esc(a)).join(' · ')}</span>` : '';
+    const awardPills = s.awards.length ? `<span style="font-size:12px;color:var(--gold)">${s.awards.map(a=>esc(a)).join(' · ')}</span>` : '';
     const eventLabel = `<span class="event-link" data-event="${esc(s.event)}|${s.year}" onclick="event.stopPropagation()" style="font-size:12px;color:var(--text-faint);cursor:pointer" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-faint)'">${esc(s.event)}</span>`;
+    const memberViewsTotal = viewsFor(s);
+    const memberViewsLabel = memberViewsTotal!==undefined ? `<span style="flex-shrink:0;font-size:11px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap">${memberViewsTotal.toLocaleString()} views</span>` : '';
     const memberNewViewsBadge = (()=>{
       if (!YT_LIVE || !YT_LIVE.viewMap || !s.video_id) return '';
       const liveV = YT_LIVE.viewMap[s.video_id];
@@ -3717,13 +3809,16 @@ const tlRows = eventsInCareer.map((ek, i) => {
     const memberAwardMouseover = s.awards.length ? "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)';this.style.borderLeftColor='var(--gold)'" : s.promo ? "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)';this.style.borderLeftColor='var(--text)'" : "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)'";
     const memberAwardMouseout = s.awards.length ? "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)';this.style.borderLeftColor='var(--gold)'" : s.promo ? "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)';this.style.borderLeftColor='var(--text)'" : "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)'";
     return `<div class="mini-card" data-id="${s.id}" style="display:flex;flex-direction:column;gap:0;padding:8px 12px;background:var(--bg-elev-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:0;min-width:0;overflow:hidden;transition:background 0.12s,border-color 0.12s;${memberAwardBorder}" onmouseover="${memberAwardMouseover}" onmouseout="${memberAwardMouseout}">
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
         ${s.video_id?`<div style="flex-shrink:0;width:60px;height:40px;border-radius:6px;overflow:hidden"><img loading="lazy" src="${thumbUrl(s.video_id)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>`:`<div style="flex-shrink:0;width:60px;height:40px;border-radius:6px;background:var(--bg-elev);display:flex;align-items:center;justify-content:center;font-size:18px">🎬</div>`}
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.film?esc(s.film):'<em style="opacity:0.5">untitled</em>'}${s.promo?'<span style="font-size:10px;font-weight:500;color:var(--text-faint);margin-left:5px;vertical-align:middle">(Promo)</span>':''}</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px">${eventLabel}${awardPills}</div>
         </div>
-        ${memberNewViewsBadge}
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          ${memberViewsLabel}
+          ${memberNewViewsBadge}
+        </div>
       </div>
       ${teamChip}
     </div>`;
@@ -3751,13 +3846,23 @@ const tlRows = eventsInCareer.map((ek, i) => {
   </div>`;
 }).join('');
 const tlId = 'member-tl-' + Date.now();
+const tlWrapId = tlId + '-wrap';
+window[tlWrapId+'-subs'] = subs;
 return `<section>
-<h3 style="margin-bottom:6px;display:flex;align-items:center;gap:0">
-  <span>Career timeline</span>
-  <span style="font-size:11px;font-weight:400;color:var(--text-faint);margin-left:6px">${minYear}${maxYear>minYear?`–${maxYear}`:''}</span>
-  <button id="${tlId}-btn" data-order="desc" onclick="(function(btn){var order=btn.dataset.order==='desc'?'asc':'desc';btn.dataset.order=order;btn.textContent=order==='desc'?'newest first':'oldest first';var c=document.getElementById('${tlId}');c.dataset.order=order;var rows=Array.from(c.children).filter(function(r){return r.dataset.sk;});rows.sort(function(a,b){var d=+a.dataset.sk-+b.dataset.sk;return order==='asc'?d:-d;});rows.forEach(function(r){c.appendChild(r);var fl=r.querySelector('[data-films]');if(fl){if(fl.querySelector('[data-stack-wrap]')&&typeof unbuildStack==='function')unbuildStack(fl);var ch=Array.from(fl.children).filter(function(x){return x.classList&&x.classList.contains('mini-card');});if(ch.length>1){ch.reverse();ch.forEach(function(x){fl.appendChild(x);});}}});var pb=btn.parentNode.querySelector('[data-prop]');if(pb&&pb.dataset.prop==='1'){applyPropTl('${tlId}');}})(this)" style="margin-left:8px;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">newest first</button>
-  <button data-prop="0" onclick="(function(btn){var tlId='${tlId}';var c=document.getElementById(tlId);var on=btn.dataset.prop==='1';if(!on){btn.dataset.prop='1';btn.style.color='var(--accent)';btn.style.borderColor='rgba(255,181,71,0.4)';btn.style.background='rgba(255,181,71,0.08)';applyPropTl(tlId);}else{btn.dataset.prop='0';btn.style.color='var(--text-faint)';btn.style.borderColor='var(--border)';btn.style.background='var(--bg-elev-2)';removePropTl(tlId);}})(this)" style="margin-left:6px;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="if(this.dataset.prop!=='1'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="if(this.dataset.prop!=='1'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">proportional</button>
+<h3 style="margin-bottom:8px">
+  <div style="display:flex;align-items:center;gap:0">
+    <span>Career timeline</span>
+    <span style="font-size:11px;font-weight:400;color:var(--text-faint);margin-left:6px">${minYear}${maxYear>minYear?`–${maxYear}`:''}</span>
+  </div>
+  <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+  <button id="${tlId}-btn" data-tl-only-btn="1" data-order="desc" onclick="(function(btn){var order=btn.dataset.order==='desc'?'asc':'desc';btn.dataset.order=order;btn.textContent=order==='desc'?'newest first':'oldest first';var c=document.getElementById('${tlId}');c.dataset.order=order;var rows=Array.from(c.children).filter(function(r){return r.dataset.sk;});rows.sort(function(a,b){var d=+a.dataset.sk-+b.dataset.sk;return order==='asc'?d:-d;});rows.forEach(function(r){c.appendChild(r);var fl=r.querySelector('[data-films]');if(fl){if(fl.querySelector('[data-stack-wrap]')&&typeof unbuildStack==='function')unbuildStack(fl);var ch=Array.from(fl.children).filter(function(x){return x.classList&&x.classList.contains('mini-card');});if(ch.length>1){ch.reverse();ch.forEach(function(x){fl.appendChild(x);});}}});var pb=btn.parentNode.querySelector('[data-prop]');if(pb&&pb.dataset.prop==='1'){applyPropTl('${tlId}');}})(this)" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">newest first</button>
+  <button data-tl-only-btn="1" data-prop="0" onclick="(function(btn){var tlId='${tlId}';var c=document.getElementById(tlId);var on=btn.dataset.prop==='1';if(!on){btn.dataset.prop='1';btn.style.color='var(--accent)';btn.style.borderColor='rgba(255,181,71,0.4)';btn.style.background='rgba(255,181,71,0.08)';applyPropTl(tlId);}else{btn.dataset.prop='0';btn.style.color='var(--text-faint)';btn.style.borderColor='var(--border)';btn.style.background='var(--bg-elev-2)';removePropTl(tlId);}})(this)" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="if(this.dataset.prop!=='1'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="if(this.dataset.prop!=='1'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">proportional</button>
+  <button data-views-btn="1" onclick="toggleViewsRank(this,'${tlWrapId}','${tlWrapId}-subs','member')" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="var rv=this.closest('section').querySelector('[data-rank-view]');if(!rv||rv.style.display!=='block'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="var rv=this.closest('section').querySelector('[data-rank-view]');if(!rv||rv.style.display!=='block'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">Sort by views</button>
+  <button data-rank-back="1" onclick="exitViewsRank('${tlWrapId}')" style="display:none;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">← Back to timeline</button>
+  </div>
 </h3>
+<div id="${tlWrapId}">
+<div data-tl-view="1">
 <div style="margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap">
   <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-faint);cursor:pointer"><input type="checkbox" id="${tlId}-teams-chk" style="accent-color:var(--accent);cursor:pointer" onchange="(function(chk){var show=chk.checked;var c=document.getElementById('${tlId}');c.querySelectorAll('[data-team-chip]').forEach(function(el){el.style.display=show?'block':'none';});})(this)"> Show team</label>
   <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-faint);cursor:pointer"><input type="checkbox" id="${tlId}-missed-chk" style="accent-color:var(--accent);cursor:pointer" onchange="(function(chk){var show=chk.checked;var c=document.getElementById('${tlId}');c.querySelectorAll('[data-missed-event]').forEach(function(el){el.style.display=show?'flex':'none';});c.querySelectorAll('[data-missed-row]').forEach(function(el){el.style.display=show?'block':'none';});})(this)"> Show missed events</label>
@@ -3765,6 +3870,9 @@ return `<section>
 <div style="position:relative">
   <div id="${tlId}-ov" style="position:absolute;inset:0;display:none;pointer-events:none"></div>
   <div id="${tlId}" data-order="desc" style="padding:0 0 4px;position:relative;z-index:1">${tlRows}</div>
+</div>
+</div>
+<div data-rank-view="1" style="display:none"></div>
 </div>
 </section>`;
 })() : kind==='team' ? (()=>{
@@ -3816,8 +3924,10 @@ const tlRowsTeam = eventsInCareerTeam.map((ek, i)=>{
   const evYear = +evYearStr;
   const dotColor = participated ? '#1D9E75' : 'var(--border-strong,#555)';
   const filmChips = yrSubs.map(s=>{
-    const awardPills = s.awards.length ? `<span style="font-size:12px;color:var(--gold)">🏆 ${s.awards.map(a=>esc(a)).join(' · ')}</span>` : '';
+    const awardPills = s.awards.length ? `<span style="font-size:12px;color:var(--gold)">${s.awards.map(a=>esc(a)).join(' · ')}</span>` : '';
     const eventLabel = `<span class="event-link" data-event="${esc(s.event)}|${s.year}" onclick="event.stopPropagation()" style="font-size:12px;color:var(--text-faint);cursor:pointer" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-faint)'">${esc(s.event)}</span>`;
+    const teamViewsTotal = viewsFor(s);
+    const teamViewsLabel = teamViewsTotal!==undefined ? `<span style="flex-shrink:0;font-size:11px;font-weight:600;color:var(--text-dim);font-variant-numeric:tabular-nums;white-space:nowrap">${teamViewsTotal.toLocaleString()} views</span>` : '';
     const memberChips = s.members.length
       ? `<div data-member-chips style="display:none;flex-wrap:wrap;gap:3px;margin-top:4px">${s.members.map(m=>`<span class="member-chip" data-member="${esc(m)}" style="font-size:10px;padding:1px 6px" onclick="event.stopPropagation()">${esc(m)}</span>`).join('')}</div>`
       : '';
@@ -3834,13 +3944,16 @@ const tlRowsTeam = eventsInCareerTeam.map((ek, i)=>{
     const teamAwardMouseover = s.awards.length ? "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)';this.style.borderLeftColor='var(--gold)'" : s.promo ? "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)';this.style.borderLeftColor='var(--text)'" : "this.style.background='var(--bg-elev)';this.style.borderColor='var(--border-strong)'";
     const teamAwardMouseout = s.awards.length ? "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)';this.style.borderLeftColor='var(--gold)'" : s.promo ? "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)';this.style.borderLeftColor='var(--text)'" : "this.style.background='var(--bg-elev-2)';this.style.borderColor='var(--border)'";
     return `<div class="mini-card" data-id="${s.id}" style="display:flex;flex-direction:column;gap:0;padding:9px 12px;background:var(--bg-elev-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;margin-bottom:0;min-width:0;overflow:hidden;transition:background 0.12s,border-color 0.12s;${teamAwardBorder}" onmouseover="${teamAwardMouseover}" onmouseout="${teamAwardMouseout}">
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:flex-start;gap:8px">
         ${s.video_id?`<div style="flex-shrink:0;width:60px;height:40px;border-radius:6px;overflow:hidden"><img loading="lazy" src="${thumbUrl(s.video_id)}" style="width:100%;height:100%;object-fit:cover" alt=""></div>`:`<div style="flex-shrink:0;width:60px;height:40px;border-radius:6px;background:var(--bg-elev);display:flex;align-items:center;justify-content:center;font-size:18px">🎬</div>`}
         <div style="min-width:0;flex:1">
           <div style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.film?esc(s.film):'<em style="opacity:0.5">untitled</em>'}${s.promo?'<span style="font-size:10px;font-weight:500;color:var(--text-faint);margin-left:5px;vertical-align:middle">(Promo)</span>':''}</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:2px">${eventLabel}${awardPills}</div>
         </div>
-        ${teamNewViewsBadge}
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+          ${teamViewsLabel}
+          ${teamNewViewsBadge}
+        </div>
       </div>
       ${memberChips}
     </div>`;
@@ -3868,13 +3981,23 @@ const tlRowsTeam = eventsInCareerTeam.map((ek, i)=>{
   </div>`;
 }).join('');
 const tlIdTeam = 'team-tl-' + Date.now();
+const tlWrapIdTeam = tlIdTeam + '-wrap';
+window[tlWrapIdTeam+'-subs'] = subs;
 return `<section>
-<h3 style="margin-bottom:6px;display:flex;align-items:center;gap:0">
-  <span>Filmography</span>
-  <span style="font-size:11px;font-weight:400;color:var(--text-faint);margin-left:6px">${minYear}${maxYear>minYear?`–${maxYear}`:''}</span>
-  <button id="${tlIdTeam}-btn" data-order="desc" onclick="(function(btn){var order=btn.dataset.order==='desc'?'asc':'desc';btn.dataset.order=order;btn.textContent=order==='desc'?'newest first':'oldest first';var c=document.getElementById('${tlIdTeam}');c.dataset.order=order;var rows=Array.from(c.children).filter(function(r){return r.dataset.sk;});rows.sort(function(a,b){var d=+a.dataset.sk-+b.dataset.sk;return order==='asc'?d:-d;});rows.forEach(function(r){c.appendChild(r);var fl=r.querySelector('[data-films]');if(fl){if(fl.querySelector('[data-stack-wrap]')&&typeof unbuildStack==='function')unbuildStack(fl);var ch=Array.from(fl.children).filter(function(x){return x.classList&&x.classList.contains('mini-card');});if(ch.length>1){ch.reverse();ch.forEach(function(x){fl.appendChild(x);});}}});var pb=btn.parentNode.querySelector('[data-prop]');if(pb&&pb.dataset.prop==='1'){applyPropTl('${tlIdTeam}');}})(this)" style="margin-left:8px;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">newest first</button>
-  <button data-prop="0" onclick="(function(btn){var tlId='${tlIdTeam}';var c=document.getElementById(tlId);var on=btn.dataset.prop==='1';if(!on){btn.dataset.prop='1';btn.style.color='var(--accent)';btn.style.borderColor='rgba(255,181,71,0.4)';btn.style.background='rgba(255,181,71,0.08)';applyPropTl(tlId);}else{btn.dataset.prop='0';btn.style.color='var(--text-faint)';btn.style.borderColor='var(--border)';btn.style.background='var(--bg-elev-2)';removePropTl(tlId);}})(this)" style="margin-left:6px;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="if(this.dataset.prop!=='1'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="if(this.dataset.prop!=='1'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">proportional</button>
+<h3 style="margin-bottom:8px">
+  <div style="display:flex;align-items:center;gap:0">
+    <span>Filmography</span>
+    <span style="font-size:11px;font-weight:400;color:var(--text-faint);margin-left:6px">${minYear}${maxYear>minYear?`–${maxYear}`:''}</span>
+  </div>
+  <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+  <button id="${tlIdTeam}-btn" data-tl-only-btn="1" data-order="desc" onclick="(function(btn){var order=btn.dataset.order==='desc'?'asc':'desc';btn.dataset.order=order;btn.textContent=order==='desc'?'newest first':'oldest first';var c=document.getElementById('${tlIdTeam}');c.dataset.order=order;var rows=Array.from(c.children).filter(function(r){return r.dataset.sk;});rows.sort(function(a,b){var d=+a.dataset.sk-+b.dataset.sk;return order==='asc'?d:-d;});rows.forEach(function(r){c.appendChild(r);var fl=r.querySelector('[data-films]');if(fl){if(fl.querySelector('[data-stack-wrap]')&&typeof unbuildStack==='function')unbuildStack(fl);var ch=Array.from(fl.children).filter(function(x){return x.classList&&x.classList.contains('mini-card');});if(ch.length>1){ch.reverse();ch.forEach(function(x){fl.appendChild(x);});}}});var pb=btn.parentNode.querySelector('[data-prop]');if(pb&&pb.dataset.prop==='1'){applyPropTl('${tlIdTeam}');}})(this)" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">newest first</button>
+  <button data-tl-only-btn="1" data-prop="0" onclick="(function(btn){var tlId='${tlIdTeam}';var c=document.getElementById(tlId);var on=btn.dataset.prop==='1';if(!on){btn.dataset.prop='1';btn.style.color='var(--accent)';btn.style.borderColor='rgba(255,181,71,0.4)';btn.style.background='rgba(255,181,71,0.08)';applyPropTl(tlId);}else{btn.dataset.prop='0';btn.style.color='var(--text-faint)';btn.style.borderColor='var(--border)';btn.style.background='var(--bg-elev-2)';removePropTl(tlId);}})(this)" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="if(this.dataset.prop!=='1'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="if(this.dataset.prop!=='1'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">proportional</button>
+  <button data-views-btn="1" onclick="toggleViewsRank(this,'${tlWrapIdTeam}','${tlWrapIdTeam}-subs','team')" style="font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0;transition:color 0.15s,border-color 0.15s,background 0.15s" onmouseover="var rv=this.closest('section').querySelector('[data-rank-view]');if(!rv||rv.style.display!=='block'){this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'}" onmouseout="var rv=this.closest('section').querySelector('[data-rank-view]');if(!rv||rv.style.display!=='block'){this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'}">Sort by views</button>
+  <button data-rank-back="1" onclick="exitViewsRank('${tlWrapIdTeam}')" style="display:none;font-size:11px;font-weight:500;color:var(--text-faint);background:var(--bg-elev-2);border:1px solid var(--border);border-radius:6px;padding:2px 8px;cursor:pointer;flex-shrink:0" onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--border-strong)'" onmouseout="this.style.color='var(--text-faint)';this.style.borderColor='var(--border)'">← Back to timeline</button>
+  </div>
 </h3>
+<div id="${tlWrapIdTeam}">
+<div data-tl-view="1">
 <div style="margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap">
   <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-faint);cursor:pointer"><input type="checkbox" id="${tlIdTeam}-members-chk" style="accent-color:var(--accent);cursor:pointer" onchange="(function(chk){var show=chk.checked;var c=document.getElementById('${tlIdTeam}');c.querySelectorAll('[data-member-chips]').forEach(function(el){el.style.display=show?'flex':'none';});})(this)"> Show members</label>
   <label style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--text-faint);cursor:pointer"><input type="checkbox" id="${tlIdTeam}-missed-chk" style="accent-color:var(--accent);cursor:pointer" onchange="(function(chk){var show=chk.checked;var c=document.getElementById('${tlIdTeam}');c.querySelectorAll('[data-missed-event]').forEach(function(el){el.style.display=show?'flex':'none';});c.querySelectorAll('[data-missed-row]').forEach(function(el){el.style.display=show?'block':'none';});})(this)"> Show missed events</label>
@@ -3882,6 +4005,9 @@ return `<section>
 <div style="position:relative">
   <div id="${tlIdTeam}-ov" style="position:absolute;inset:0;display:none;pointer-events:none"></div>
   <div id="${tlIdTeam}" data-order="desc" style="padding:0 0 4px;position:relative;z-index:1">${tlRowsTeam}</div>
+</div>
+</div>
+<div data-rank-view="1" style="display:none"></div>
 </div>
 </section>`;
 })() : (()=>{
