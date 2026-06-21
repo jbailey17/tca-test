@@ -552,8 +552,10 @@ btn.textContent = wrap.dataset.order==='desc' ? '↓ Most views' : '↑ Least vi
 }
 const subs = window[subsVarName];
 wrap.querySelector('[data-tl-view]').style.display = 'none';
-wrap.querySelector('[data-rank-view]').style.display = 'block';
-wrap.querySelector('[data-rank-view]').innerHTML = renderViewsRankList(subs, kind, wrap.dataset.order);
+const rankViewEl = wrap.querySelector('[data-rank-view]');
+rankViewEl.style.display = 'block';
+rankViewEl.innerHTML = renderViewsRankList(subs, kind, wrap.dataset.order);
+wireScope(rankViewEl);
 const back = section.querySelector('[data-rank-back]');
 if (back) back.style.display = '';
 section.querySelectorAll('[data-tl-only-btn]').forEach(function(el){ el.style.display = 'none'; });
@@ -4344,23 +4346,31 @@ showDrawer(html,{type: 'changelog'});
 wireDrawer();
 resetDrawerTheme();
 }
-function wireDrawer(){
-document.querySelectorAll('#drawer-body .card[data-id]').forEach(el=>
+// Wire up click handlers for film tiles / links within a given root element.
+// Used both for the full drawer body (wireDrawer) and for content injected
+// later into a subtree, like the views-rank list (which isn't present when
+// wireDrawer originally runs, so it needs its own pass).
+function wireScope(root){
+if (!root) return;
+root.querySelectorAll('.card[data-id]').forEach(el=>
 el.addEventListener('click',()=>openSubmission(+el.dataset.id)));
-document.querySelectorAll('#drawer-body .mini-card[data-id]').forEach(el=>
+root.querySelectorAll('.mini-card[data-id]').forEach(el=>
 el.addEventListener('click',()=>openSubmission(+el.dataset.id)));
-document.querySelectorAll('#drawer-body .leader[data-id]').forEach(el=>
+root.querySelectorAll('.leader[data-id]').forEach(el=>
 el.addEventListener('click',()=>openSubmission(+el.dataset.id)));
-document.querySelectorAll('#drawer-body .leader[data-kind]').forEach(el=>
+root.querySelectorAll('.leader[data-kind]').forEach(el=>
 el.addEventListener('click',()=>openRollup(el.dataset.kind,el.dataset.key)));
-document.querySelectorAll('#drawer-body .member-chip').forEach(el=>
+root.querySelectorAll('.member-chip').forEach(el=>
 el.addEventListener('click',()=>openRollup('member',el.dataset.member)));
-document.querySelectorAll('#drawer-body .team-link[data-team]').forEach(el=>
+root.querySelectorAll('.team-link[data-team]').forEach(el=>
 el.addEventListener('click',e=>{e.stopPropagation();openRollup('team',el.dataset.team);}));
-document.querySelectorAll('#drawer-body .event-link[data-event]').forEach(el=>
+root.querySelectorAll('.event-link[data-event]').forEach(el=>
 el.addEventListener('click',e=>{e.stopPropagation();openRollup('event',el.dataset.event);}));
-document.querySelectorAll('#drawer-body .award-link[data-award]').forEach(el=>
+root.querySelectorAll('.award-link[data-award]').forEach(el=>
 el.addEventListener('click',e=>{e.stopPropagation();openRollup('award',el.dataset.award);}));
+}
+function wireDrawer(){
+wireScope(document.getElementById('drawer-body'));
 attachDrawerTitleBar();
 document.querySelectorAll('#drawer-body .desc-toggle').forEach(btn=>{
 btn.addEventListener('click',()=>{
